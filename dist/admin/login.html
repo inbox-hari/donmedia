@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — Donmedia</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Supabase SDK + shared client (single source of truth) -->
+  <!-- Supabase client (ES Module) -->
+
+
+  <style>
+    /* Hide body until auth state is resolved — prevents login flash */
+    body { visibility: hidden; }
+    body.auth-ready { visibility: visible; }
+
+    /* Password toggle button */
+    .password-wrap {
+      position: relative;
+    }
+    .password-wrap input {
+      padding-right: 2.8rem;
+    }
+    .pw-toggle {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 1rem;
+      padding: 0.2rem;
+      transition: color 0.15s;
+    }
+    .pw-toggle:hover { color: #1e3799; }
+
+    /* Friendly error badges */
+    .error-msg {
+      display: none;
+      align-items: flex-start;
+      gap: 0.5rem;
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      text-align: left;
+      line-height: 1.4;
+    }
+    .error-msg.show { display: flex; }
+    .error-msg i { margin-top: 2px; flex-shrink: 0; }
+
+    /* Subtle auth-checking overlay */
+    .auth-checking {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3799 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      gap: 0.8rem;
+    }
+    .auth-checking.hidden { display: none; }
+  </style>
+  <script type="module" crossorigin src="/assets/login-DUupYmbg.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-Da00irRU.js">
+  <link rel="modulepreload" crossorigin href="/assets/supabase-client-BGZi-Iox.js">
+  <link rel="stylesheet" crossorigin href="/assets/admin-CVTHDKE7.css">
+</head>
+<body>
+
+<!-- Auth-checking overlay → shown while we resolve the existing session -->
+<div class="auth-checking" id="auth-checking">
+  <i class="fas fa-circle-notch fa-spin"></i>
+  Verifying session…
+</div>
+
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <i class="fas fa-hotairballoon"></i> DONMEDIA
+    </div>
+    <span class="login-badge">Admin Portal</span>
+
+    <h2>Welcome back</h2>
+    <p>Sign in with your admin credentials to manage content.</p>
+
+    <form id="login-form" novalidate>
+      <div class="form-field">
+        <label for="admin-email">Email address</label>
+        <input
+          type="email"
+          id="admin-email"
+          placeholder="admin@donmedia.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="admin-password">Password</label>
+        <div class="password-wrap">
+          <input
+            type="password"
+            id="admin-password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+          <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Toggle password visibility">
+            <i class="fas fa-eye" id="pw-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="login-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        Sign In
+      </button>
+
+      <div class="error-msg" id="login-error" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="login-error-text"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

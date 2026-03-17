@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Donmedia</title>
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Supabase client (ES Module) -->
+
+  <style>
+    /* Hide until auth is confirmed — prevents unauthenticated flash */
+    body { visibility: hidden; }
+    body.auth-ready { visibility: visible; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar backdrop (mobile) ───────────────────────────── -->
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+<!-- ════════════════ LAYOUT ════════════════ -->
+<div class="admin-layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name"><i class="fas fa-hotairballoon"></i> DONMEDIA</div>
+      <div class="brand-sub">Admin Panel</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Content</div>
+      <button class="nav-link active" id="nav-books" onclick="switchTab('books')">
+        <i class="fas fa-book"></i> Books
+      </button>
+      <button class="nav-link" id="nav-magazines" onclick="switchTab('magazines')">
+        <i class="fas fa-newspaper"></i> Magazines
+      </button>
+
+      <div class="sidebar-section" style="margin-top:1.2rem">Site</div>
+      <a class="nav-link" href="/index.html" target="_blank">
+        <i class="fas fa-external-link-alt"></i> View Site
+      </a>
+      <a class="nav-link" href="/book-store.html" target="_blank">
+        <i class="fas fa-store"></i> Book Store
+      </a>
+      <a class="nav-link" href="/magazines.html" target="_blank">
+        <i class="fas fa-newspaper"></i> Magazine Page
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logout-btn" onclick="handleLogout()">
+        <i class="fas fa-sign-out-alt"></i> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main content ────────────────────────────────────────── -->
+  <div class="admin-main">
+
+    <!-- Topbar -->
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:.8rem">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="page-title" id="topbar-title">Books</span>
+      </div>
+      <div class="topbar-right">
+        <div class="user-pill">
+          <div class="avatar" id="user-avatar">A</div>
+          <span id="user-email-display">Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="admin-body">
+
+      <!-- Stats row -->
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-book"></i></div>
+          <div>
+            <div class="stat-num" id="stat-books">—</div>
+            <div class="stat-label">Total Books</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-newspaper"></i></div>
+          <div>
+            <div class="stat-num" id="stat-magazines">—</div>
+            <div class="stat-label">Total Magazines</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="fas fa-cloud-upload-alt"></i></div>
+          <div>
+            <div class="stat-num" id="stat-uploads">0</div>
+            <div class="stat-label">Uploads Today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-books-btn" onclick="switchTab('books')">
+          <i class="fas fa-book"></i> Books
+        </button>
+        <button class="tab-btn" id="tab-magazines-btn" onclick="switchTab('magazines')">
+          <i class="fas fa-newspaper"></i> Magazines
+        </button>
+      </div>
+
+      <!-- ════ BOOKS TAB ════ -->
+      <div class="tab-panel active" id="tab-books">
+        <div class="panel-grid">
+
+          <!-- Upload form -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-plus-circle"></i> Upload New Book</h3>
+            </div>
+            <div class="card-body">
+              <form id="book-upload-form" novalidate>
+
+                <div class="form-field">
+                  <label for="b-title">Title *</label>
+                  <input type="text" id="b-title" placeholder="e.g. The Magic Forest" required />
+                </div>
+
+
+
+                <div class="form-field">
+                  <label for="b-description">Description</label>
+                  <textarea id="b-description" placeholder="Brief synopsis…" rows="3"></textarea>
+                </div>
+
+                <div class="form-field">
+                  <label for="b-price">Price (₹ or $) *</label>
+                  <input type="text" id="b-price" placeholder="e.g. 299 or 12.99" required />
+                </div>
+
+                <div class="form-field">
+                  <label>Cover Image *</label>
+                  <div class="file-drop" id="b-cover-drop">
+                    <input type="file" id="b-cover-file" accept="image/*" />
+                    <div class="file-icon"><i class="fas fa-image"></i></div>
+                    <div class="file-hint">Click or drag an image here</div>
+                    <div class="file-name" id="b-cover-name"></div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label>PDF File *</label>
+                  <div class="file-drop" id="b-pdf-drop">
+                    <input type="file" id="b-pdf-file" accept="application/pdf" />
+                    <div class="file-icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="file-hint">Click or drag a PDF here</div>
+                    <div class="file-name" id="b-pdf-name"></div>
+                  </div>
+                </div>
+
+                <div class="upload-progress" id="b-progress">
+                  <div class="progress-label" id="b-progress-label">Uploading…</div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" id="b-progress-bar"></div>
+                  </div>
+                </div>
+
+                <div class="error-msg" id="b-error"></div>
+
+                <button type="submit" class="btn btn-green" id="b-submit-btn" style="margin-top:.8rem;width:100%">
+                  <i class="fas fa-upload"></i> Upload Book
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Book list -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-list"></i> All Books</h3>
+              <button class="btn btn-ghost btn-sm" onclick="loadBooks()">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="items-table" id="books-table">
+                <thead>
+                  <tr>
+                    <th>Cover</th>
+                    <th>Title / Description</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="books-tbody">
+                  <tr><td colspan="4"><div class="empty-state"><i class="fas fa-book-open"></i><p>Loading books…</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /panel-grid -->
+      </div><!-- /tab-books -->
+
+      <!-- ════ MAGAZINES TAB ════ -->
+      <div class="tab-panel" id="tab-magazines">
+        <div class="panel-grid">
+
+          <!-- Upload form -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-plus-circle"></i> Upload New Magazine</h3>
+            </div>
+            <div class="card-body">
+              <form id="mag-upload-form" novalidate>
+
+                <div class="form-field">
+                  <label for="m-title">Title *</label>
+                  <input type="text" id="m-title" placeholder="e.g. Junior Science Vol 3" required />
+                </div>
+
+                <div class="form-field">
+                  <label for="m-description">Description</label>
+                  <textarea id="m-description" placeholder="What's inside this issue…" rows="3"></textarea>
+                </div>
+
+                <div class="form-field">
+                  <label>Cover Image *</label>
+                  <div class="file-drop" id="m-cover-drop">
+                    <input type="file" id="m-cover-file" accept="image/*" />
+                    <div class="file-icon"><i class="fas fa-image"></i></div>
+                    <div class="file-hint">Click or drag an image here</div>
+                    <div class="file-name" id="m-cover-name"></div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label>PDF File *</label>
+                  <div class="file-drop" id="m-pdf-drop">
+                    <input type="file" id="m-pdf-file" accept="application/pdf" />
+                    <div class="file-icon"><i class="fas fa-file-pdf"></i></div>
+                    <div class="file-hint">Click or drag a PDF here</div>
+                    <div class="file-name" id="m-pdf-name"></div>
+                  </div>
+                </div>
+
+                <div class="upload-progress" id="m-progress">
+                  <div class="progress-label" id="m-progress-label">Uploading…</div>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" id="m-progress-bar"></div>
+                  </div>
+                </div>
+
+                <div class="error-msg" id="m-error"></div>
+
+                <button type="submit" class="btn btn-green" id="m-submit-btn" style="margin-top:.8rem;width:100%">
+                  <i class="fas fa-upload"></i> Upload Magazine
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Magazine list -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-list"></i> All Magazines</h3>
+              <button class="btn btn-ghost btn-sm" onclick="loadMagazines()">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="items-table" id="mags-table">
+                <thead>
+                  <tr>
+                    <th>Cover</th>
+                    <th>Title / Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="mags-tbody">
+                  <tr><td colspan="3"><div class="empty-state"><i class="fas fa-newspaper"></i><p>Loading magazines…</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /panel-grid -->
+      </div><!-- /tab-magazines -->
+
+    </div><!-- /admin-body -->
+  </div><!-- /admin-main -->
+</div><!-- /admin-layout -->
+
+<!-- Toast notification -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="/src/script.js"></script>
+<script type="module" src="/src/hero-stars.js"></script>
+
+
+<!-- ── JavaScript ────────────────────────────────────────────── -->
+<script type="module">
+import { supabase } from '/src/supabase-client.js';
+
+/* — Admin State — */
+let currentUser = null;
+let uploadsToday = 0;
+const BUCKET = 'book-content';
+
+/* — Auth Persistence — */
+(async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (!session) { window.location.replace('login.html'); return; }
+    initDashboard(session.user);
+  } catch (err) {
+    console.error('Session verification failed:', err);
+    window.location.replace('login.html');
+  }
+})();
+
+/* ── React to session changes mid-use ───────────────────────── */
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+    window.location.replace('login.html');
+  }
+  if (event === 'TOKEN_REFRESHED' && session) {
+    // Token refreshed silently — update currentUser just in case
+    currentUser = session.user;
+  }
+});
+
+function initDashboard(user) {
+  currentUser = user;
+
+  const emailDisplay = document.getElementById('user-email-display');
+  const avatarEl     = document.getElementById('user-avatar');
+  if (emailDisplay) emailDisplay.textContent = user.email.split('@')[0];
+  if (avatarEl)     avatarEl.textContent     = user.email.charAt(0).toUpperCase();
+
+  // Reveal the dashboard now that auth is confirmed
+  document.body.classList.add('auth-ready');
+
+  loadBooks();
+  loadMagazines();
+}
+
+async function handleLogout() {
+  const btn = document.getElementById('logout-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Signing out…'; }
+  await supabase.auth.signOut();
+  window.location.replace('login.html');
+}
+window.handleLogout = handleLogout;
+
+
+/* ════════════════════════════════════════════════════════════
+   UI HELPERS
+   ════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'success' ? '✓ ' : '✕ ') + msg;
+  t.className   = 'toast ' + type + ' show';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('show');
+}
+
+function setProgress(prefix, pct, label) {
+  const wrap  = document.getElementById(prefix + '-progress');
+  const bar   = document.getElementById(prefix + '-progress-bar');
+  const lbl   = document.getElementById(prefix + '-progress-label');
+  if (!wrap) return;
+  wrap.classList.add('show');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = label || 'Uploading…';
+}
+function hideProgress(prefix) {
+  const wrap = document.getElementById(prefix + '-progress');
+  if (wrap) {
+    setTimeout(() => {
+      wrap.classList.remove('show');
+      const bar = document.getElementById(prefix + '-progress-bar');
+      if (bar) bar.style.width = '0%';
+    }, 800);
+  }
+}
+
+/* File input label preview */
+function bindFilePicker(inputId, nameId) {
+  const input = document.getElementById(inputId);
+  const name  = document.getElementById(nameId);
+  if (!input || !name) return;
+  input.addEventListener('change', () => {
+    name.textContent = input.files[0] ? input.files[0].name : '';
+  });
+}
+bindFilePicker('b-cover-file', 'b-cover-name');
+bindFilePicker('b-pdf-file',   'b-pdf-name');
+bindFilePicker('m-cover-file', 'm-cover-name');
+bindFilePicker('m-pdf-file',   'm-pdf-name');
+
+/* ════════════════════════════════════════════════════════════
+   TAB SWITCHING
+   ════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+  ['books', 'magazines'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('tab-' + t + '-btn').classList.toggle('active', t === tab);
+    document.getElementById('nav-' + t).classList.toggle('active', t === tab);
+  });
+  const title = { books: 'Books', magazines: 'Magazines' };
+  document.getElementById('topbar-title').textContent = title[tab] || tab;
+
+  // close mobile sidebar after selecting
+  closeSidebar();
+}
+window.switchTab = switchTab;
+
+
+/* ════════════════════════════════════════════════════════════
+   UNIQUE FILE PATH
+   ════════════════════════════════════════════════════════════ */
+function uniquePath(folder, file) {
+  const ts   = Date.now();
+  const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  return `${folder}/${ts}_${safe}`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   UPLOAD FILE TO STORAGE → returns public URL
+   ════════════════════════════════════════════════════════════ */
+async function uploadFile(folder, file) {
+  const path = uniquePath(folder, file);
+  const { data, error } = await supabase.storage.from(BUCKET).upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (error) throw new Error('Storage upload failed: ' + error.message);
+  const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return publicUrl;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BOOKS
+   ════════════════════════════════════════════════════════════ */
+
+/* — Upload — */
+document.getElementById('book-upload-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearError('b-error');
+
+  const title  = document.getElementById('b-title').value.trim();
+  const desc   = document.getElementById('b-description').value.trim();
+  const price  = document.getElementById('b-price').value.trim();
+  const cover  = document.getElementById('b-cover-file').files[0];
+  const pdf    = document.getElementById('b-pdf-file').files[0];
+
+  if (!title || !price) { showError('b-error', 'Title and Price are required.'); return; }
+  if (!cover) { showError('b-error', 'Please select a cover image.'); return; }
+  if (!pdf)   { showError('b-error', 'Please select a PDF file.');   return; }
+
+  const btn = document.getElementById('b-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Uploading…';
+
+  try {
+    setProgress('b', 20, 'Uploading cover image…');
+    const coverUrl = await uploadFile('books/covers', cover);
+
+    setProgress('b', 60, 'Uploading PDF…');
+    const pdfUrl = await uploadFile('books/pdfs', pdf);
+
+    setProgress('b', 90, 'Saving to database…');
+    const { error } = await supabase.from('books').insert([{
+      title, description: desc, cover_url: coverUrl, pdf_url: pdfUrl, price
+    }]);
+    if (error) throw new Error(error.message);
+
+    setProgress('b', 100, 'Done!');
+    hideProgress('b');
+    showToast('Book uploaded successfully!');
+    document.getElementById('book-upload-form').reset();
+    ['b-cover-name','b-pdf-name'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
+    uploadsToday++;
+    document.getElementById('stat-uploads').textContent = uploadsToday;
+    loadBooks();
+  } catch (err) {
+    hideProgress('b');
+    showError('b-error', err.message);
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-upload"></i> Upload Book';
+  }
+});
+
+/* — Load Books — */
+async function loadBooks() {
+  const tbody = document.getElementById('books-tbody');
+  tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
+
+  const { data, error } = await supabase.from('books').select('*').order('created_at', { ascending: false });
+  if (error) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load books.</p></div></td></tr>';
+    return;
+  }
+
+  document.getElementById('stat-books').textContent = data.length;
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-book-open"></i><p>No books yet. Upload your first one!</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(book => `
+    <tr id="book-row-${book.id}">
+      <td>
+        ${book.cover_url
+          ? `<img class="item-thumb" src="${escHtml(book.cover_url)}" alt="${escHtml(book.title)}" loading="lazy">`
+          : `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`}
+      </td>
+      <td>
+        <div class="item-title">${escHtml(book.title)}</div>
+        <div class="item-meta" style="margin-top:2px">${escHtml(book.description || '')}</div>
+      </td>
+      <td><span class="badge badge-blue">${escHtml(String(book.price || '—'))}</span></td>
+      <td>
+        <div class="action-group">
+          <button class="btn btn-orange btn-sm" onclick="editBook('${book.id}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn btn-red btn-sm" onclick="deleteBook('${book.id}', '${escHtml(book.cover_url || '')}', '${escHtml(book.pdf_url || '')}')">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* — Edit Book inline — */
+async function editBook(id) {
+  const { data, error } = await supabase.from('books').select('*').eq('id', id).single();
+  if (error) { showToast('Could not load book data.', 'error'); return; }
+
+  const row = document.getElementById('book-row-' + id);
+  row.classList.add('edit-row');
+  row.innerHTML = `
+    <td colspan="3" style="padding:.8rem">
+      <div style="display:grid;grid-template-columns:1fr;gap:.6rem;margin-bottom:.5rem">
+        <input id="edit-b-title-${id}"  value="${escAttr(data.title)}"  placeholder="Title"  style="font-weight:700" />
+        <input id="edit-b-price-${id}"  value="${escAttr(data.price || '')}"  placeholder="Price"  />
+        <input id="edit-b-desc-${id}"   value="${escAttr(data.description || '')}" placeholder="Description" />
+      </div>
+    </td>
+    <td>
+      <div class="action-group" style="flex-direction:column;align-items:stretch">
+        <button class="btn btn-green btn-sm" onclick="saveBook('${id}')">
+          <i class="fas fa-check"></i> Save
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="loadBooks()" style="margin-top:.3rem">
+          Cancel
+        </button>
+      </div>
+    </td>
+  `;
+}
+
+async function saveBook(id) {
+  const title  = document.getElementById('edit-b-title-' + id).value.trim();
+  const price  = document.getElementById('edit-b-price-' + id).value.trim();
+  const desc   = document.getElementById('edit-b-desc-' + id).value.trim();
+
+  if (!title) { showToast('Title cannot be empty.', 'error'); return; }
+
+  const { error } = await supabase.from('books').update({ title, price, description: desc }).eq('id', id);
+  if (error) { showToast('Failed to save: ' + error.message, 'error'); return; }
+  showToast('Book updated!');
+  loadBooks();
+}
+
+/* — Delete Book — */
+async function deleteBook(id, coverUrl, pdfUrl) {
+  if (!confirm('Delete this book? This cannot be undone.')) return;
+
+  const pathFromUrl = (url) => {
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split('/object/public/' + BUCKET + '/');
+      return parts[1] ? decodeURIComponent(parts[1]) : null;
+    } catch { return null; }
+  };
+
+  // Remove files from storage (best effort)
+  const toRemove = [coverUrl, pdfUrl].map(pathFromUrl).filter(Boolean);
+  if (toRemove.length) await supabase.storage.from(BUCKET).remove(toRemove);
+
+  const { error } = await supabase.from('books').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Book deleted.');
+  loadBooks();
+}
+window.loadBooks = loadBooks;
+window.editBook = editBook;
+window.saveBook = saveBook;
+window.deleteBook = deleteBook;
+
+/* ════════════════════════════════════════════════════════════
+   MAGAZINES
+   ════════════════════════════════════════════════════════════ */
+
+/* — Upload — */
+document.getElementById('mag-upload-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearError('m-error');
+
+  const title = document.getElementById('m-title').value.trim();
+  const desc  = document.getElementById('m-description').value.trim();
+  const cover = document.getElementById('m-cover-file').files[0];
+  const pdf   = document.getElementById('m-pdf-file').files[0];
+
+  if (!title) { showError('m-error', 'Title is required.'); return; }
+  if (!cover) { showError('m-error', 'Please select a cover image.'); return; }
+  if (!pdf)   { showError('m-error', 'Please select a PDF file.');   return; }
+
+  const btn = document.getElementById('m-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Uploading…';
+
+  try {
+    setProgress('m', 20, 'Uploading cover image…');
+    const coverUrl = await uploadFile('magazines/covers', cover);
+
+    setProgress('m', 60, 'Uploading PDF…');
+    const pdfUrl = await uploadFile('magazines/pdfs', pdf);
+
+    setProgress('m', 90, 'Saving to database…');
+    const { error } = await supabase.from('magazines').insert([{
+      title, description: desc, cover_url: coverUrl, pdf_url: pdfUrl
+    }]);
+    if (error) throw new Error(error.message);
+
+    setProgress('m', 100, 'Done!');
+    hideProgress('m');
+    showToast('Magazine uploaded successfully!');
+    document.getElementById('mag-upload-form').reset();
+    ['m-cover-name','m-pdf-name'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
+    uploadsToday++;
+    document.getElementById('stat-uploads').textContent = uploadsToday;
+    loadMagazines();
+  } catch (err) {
+    hideProgress('m');
+    showError('m-error', err.message);
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-upload"></i> Upload Magazine';
+  }
+});
+
+/* — Load Magazines — */
+async function loadMagazines() {
+  const tbody = document.getElementById('mags-tbody');
+  tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
+
+  const { data, error } = await supabase.from('magazines').select('*').order('created_at', { ascending: false });
+  if (error) {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load magazines.</p></div></td></tr>';
+    return;
+  }
+
+  document.getElementById('stat-magazines').textContent = data.length;
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-newspaper"></i><p>No magazines yet. Upload your first one!</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(mag => `
+    <tr id="mag-row-${mag.id}">
+      <td>
+        ${mag.cover_url
+          ? `<img class="item-thumb" src="${escHtml(mag.cover_url)}" alt="${escHtml(mag.title)}" loading="lazy">`
+          : `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`}
+      </td>
+      <td>
+        <div class="item-title">${escHtml(mag.title)}</div>
+        <div class="item-meta">${escHtml(mag.description || '')}</div>
+      </td>
+      <td>
+        <div class="action-group">
+          <button class="btn btn-orange btn-sm" onclick="editMagazine('${mag.id}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn btn-red btn-sm" onclick="deleteMagazine('${mag.id}', '${escHtml(mag.cover_url || '')}', '${escHtml(mag.pdf_url || '')}')">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+window.loadMagazines = loadMagazines;
+
+/* — Edit Magazine inline — */
+async function editMagazine(id) {
+  const { data, error } = await supabase.from('magazines').select('*').eq('id', id).single();
+  if (error) { showToast('Could not load magazine data.', 'error'); return; }
+
+  const row = document.getElementById('mag-row-' + id);
+  row.classList.add('edit-row');
+  row.innerHTML = `
+    <td colspan="2" style="padding:.8rem">
+      <div style="display:grid;grid-template-columns:1fr;gap:.6rem">
+        <input id="edit-m-title-${id}" value="${escAttr(data.title)}" placeholder="Title" style="font-weight:700" />
+        <input id="edit-m-desc-${id}"  value="${escAttr(data.description || '')}" placeholder="Description" />
+      </div>
+    </td>
+    <td>
+      <div class="action-group" style="flex-direction:column;align-items:stretch">
+        <button class="btn btn-green btn-sm" onclick="saveMagazine('${id}')">
+          <i class="fas fa-check"></i> Save
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="loadMagazines()" style="margin-top:.3rem">
+          Cancel
+        </button>
+      </div>
+    </td>
+  `;
+}
+window.editMagazine = editMagazine;
+
+async function saveMagazine(id) {
+  const title = document.getElementById('edit-m-title-' + id).value.trim();
+  const desc  = document.getElementById('edit-m-desc-' + id).value.trim();
+
+  if (!title) { showToast('Title cannot be empty.', 'error'); return; }
+
+  const { error } = await supabase.from('magazines').update({ title, description: desc }).eq('id', id);
+  if (error) { showToast('Failed to save: ' + error.message, 'error'); return; }
+  showToast('Magazine updated!');
+  loadMagazines();
+}
+window.saveMagazine = saveMagazine;
+
+/* — Delete Magazine — */
+async function deleteMagazine(id, coverUrl, pdfUrl) {
+  if (!confirm('Delete this magazine? This cannot be undone.')) return;
+
+  const pathFromUrl = (url) => {
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split('/object/public/' + BUCKET + '/');
+      return parts[1] ? decodeURIComponent(parts[1]) : null;
+    } catch { return null; }
+  };
+
+  const toRemove = [coverUrl, pdfUrl].map(pathFromUrl).filter(Boolean);
+  if (toRemove.length) await supabase.storage.from(BUCKET).remove(toRemove);
+
+  const { error } = await supabase.from('magazines').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Magazine deleted.');
+  loadMagazines();
+}
+window.deleteMagazine = deleteMagazine;
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE SIDEBAR
+   ════════════════════════════════════════════════════════════ */
+const sidebarEl   = document.getElementById('sidebar');
+const backdropEl  = document.getElementById('sidebar-backdrop');
+const toggleBtn   = document.getElementById('sidebar-toggle');
+
+function openSidebar()  { sidebarEl.classList.add('open');  backdropEl.style.display = 'block'; }
+function closeSidebar() { sidebarEl.classList.remove('open'); backdropEl.style.display = 'none'; }
+window.closeSidebar = closeSidebar; // needs to be global for nav calls
+
+if (toggleBtn)   toggleBtn.addEventListener('click', openSidebar);
+if (backdropEl)  backdropEl.addEventListener('click', closeSidebar);
+
+/* ════════════════════════════════════════════════════════════
+   XSS HELPERS
+   ════════════════════════════════════════════════════════════ */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escAttr(str) {
+  return String(str).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+</script>
+</body>
+</html>
