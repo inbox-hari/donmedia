@@ -1,1 +1,0 @@
-import"./FlipbookReader-CtuZ8Z3s.js";import"./modulepreload-polyfill-Da00irRU.js";import"./hero-stars-LBTYKB-4.js";import"./reader-modal-entry-Cos9IzTU.js";document.querySelectorAll(`.product-card[data-book]`).forEach(e=>{e.addEventListener(`click`,()=>{console.log(`Opening reader with:`,e.dataset.book),window.openBookReader&&window.openBookReader(e.dataset.book)})});
