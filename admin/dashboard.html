@@ -313,7 +313,7 @@ import { supabase } from '/src/supabase-client.js';
 /* — Admin State — */
 let currentUser = null;
 let uploadsToday = 0;
-const BUCKET = 'book-content';
+const BUCKET = 'donmedia'; // Updated to correct bucket name
 
 /* — Auth Persistence — */
 (async () => {
@@ -443,7 +443,9 @@ window.switchTab = switchTab;
    ════════════════════════════════════════════════════════════ */
 function uniquePath(folder, file) {
   const ts   = Date.now();
+  // Safe filename: remove spaces and special characters
   const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  // Format: folder/timestamp_filename
   return `${folder}/${ts}_${safe}`;
 }
 
@@ -452,13 +454,24 @@ function uniquePath(folder, file) {
    ════════════════════════════════════════════════════════════ */
 async function uploadFile(folder, file) {
   const path = uniquePath(folder, file);
+  console.log(`Starting upload to path: ${path} in bucket: ${BUCKET}`);
+  
   const { data, error } = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: '3600',
+    contentType: file.type, // Explicitly set content type
     upsert: false,
   });
-  if (error) throw new Error('Storage upload failed: ' + error.message);
+
+  if (error) {
+    console.error(`Upload error for ${file.name}:`, error);
+    throw new Error('Storage upload failed: ' + error.message);
+  }
+
+  console.log(`Upload successful: ${path}`);
   const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return publicUrl;
+  
+  // Return both path and public URL as requested
+  return { path, publicUrl };
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -486,14 +499,18 @@ document.getElementById('book-upload-form').addEventListener('submit', async (e)
 
   try {
     setProgress('b', 20, 'Uploading cover image…');
-    const coverUrl = await uploadFile('books/covers', cover);
+    const coverResult = await uploadFile('books/covers', cover);
 
     setProgress('b', 60, 'Uploading PDF…');
-    const pdfUrl = await uploadFile('books/pdfs', pdf);
+    const pdfResult = await uploadFile('books/pdfs', pdf);
 
     setProgress('b', 90, 'Saving to database…');
     const { error } = await supabase.from('books').insert([{
-      title, description: desc, cover_url: coverUrl, pdf_url: pdfUrl, price
+      title, 
+      description: desc, 
+      cover_url: coverResult.publicUrl, 
+      pdf_url: pdfResult.publicUrl, 
+      price
     }]);
     if (error) throw new Error(error.message);
 
@@ -650,14 +667,14 @@ document.getElementById('mag-upload-form').addEventListener('submit', async (e) 
 
   try {
     setProgress('m', 20, 'Uploading cover image…');
-    const coverUrl = await uploadFile('magazines/covers', cover);
+    const coverResult = await uploadFile('magazines/covers', cover);
 
     setProgress('m', 60, 'Uploading PDF…');
-    const pdfUrl = await uploadFile('magazines/pdfs', pdf);
+    const pdfResult = await uploadFile('magazines/pdfs', pdf);
 
     setProgress('m', 90, 'Saving to database…');
     const { error } = await supabase.from('magazines').insert([{
-      title, description: desc, cover_url: coverUrl, pdf_url: pdfUrl
+      title, description: desc, cover_url: coverResult.publicUrl, pdf_url: pdfResult.publicUrl
     }]);
     if (error) throw new Error(error.message);
 
