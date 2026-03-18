@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom/client';
 import FlipbookReader from './components/FlipbookReader';
 
 const StandaloneReader = () => {
-  const bookUrl = new URLSearchParams(window.location.search).get('book');
-  console.log("Opening standalone reader with:", bookUrl);
+  const params = new URLSearchParams(window.location.search);
+  const pdfUrl = params.get('book') || params.get('pdf');
+  console.log("Opening standalone reader with:", pdfUrl);
 
-  if (!bookUrl) {
+  if (!pdfUrl) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem', color: '#dc2626' }}>
         <h2>Error: No book specified.</h2>
@@ -18,7 +19,7 @@ const StandaloneReader = () => {
 
   return (
     <div className="standalone-reader-container">
-      <FlipbookReader fileUrl={bookUrl} />
+      <FlipbookReader fileUrl={pdfUrl} />
     </div>
   );
 };

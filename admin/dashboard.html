@@ -212,87 +212,7 @@
 
       <!-- ════ MAGAZINES TAB ════ -->
       <div class="tab-panel" id="tab-magazines">
-        <div class="panel-grid">
-
-          <!-- Upload form -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i class="fas fa-plus-circle"></i> Upload New Magazine</h3>
-            </div>
-            <div class="card-body">
-              <form id="mag-upload-form" novalidate>
-
-                <div class="form-field">
-                  <label for="m-title">Title *</label>
-                  <input type="text" id="m-title" placeholder="e.g. Junior Science Vol 3" required />
-                </div>
-
-                <div class="form-field">
-                  <label for="m-description">Description</label>
-                  <textarea id="m-description" placeholder="What's inside this issue…" rows="3"></textarea>
-                </div>
-
-                <div class="form-field">
-                  <label>Cover Image *</label>
-                  <div class="file-drop" id="m-cover-drop">
-                    <input type="file" id="m-cover-file" accept="image/*" />
-                    <div class="file-icon"><i class="fas fa-image"></i></div>
-                    <div class="file-hint">Click or drag an image here</div>
-                    <div class="file-name" id="m-cover-name"></div>
-                  </div>
-                </div>
-
-                <div class="form-field">
-                  <label>PDF File *</label>
-                  <div class="file-drop" id="m-pdf-drop">
-                    <input type="file" id="m-pdf-file" accept="application/pdf" />
-                    <div class="file-icon"><i class="fas fa-file-pdf"></i></div>
-                    <div class="file-hint">Click or drag a PDF here</div>
-                    <div class="file-name" id="m-pdf-name"></div>
-                  </div>
-                </div>
-
-                <div class="upload-progress" id="m-progress">
-                  <div class="progress-label" id="m-progress-label">Uploading…</div>
-                  <div class="progress-bar-wrap">
-                    <div class="progress-bar" id="m-progress-bar"></div>
-                  </div>
-                </div>
-
-                <div class="error-msg" id="m-error"></div>
-
-                <button type="submit" class="btn btn-green" id="m-submit-btn" style="margin-top:.8rem;width:100%">
-                  <i class="fas fa-upload"></i> Upload Magazine
-                </button>
-              </form>
-            </div>
-          </div>
-
-          <!-- Magazine list -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i class="fas fa-list"></i> All Magazines</h3>
-              <button class="btn btn-ghost btn-sm" onclick="loadMagazines()">
-                <i class="fas fa-sync-alt"></i> Refresh
-              </button>
-            </div>
-            <div style="overflow-x:auto">
-              <table class="items-table" id="mags-table">
-                <thead>
-                  <tr>
-                    <th>Cover</th>
-                    <th>Title / Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="mags-tbody">
-                  <tr><td colspan="3"><div class="empty-state"><i class="fas fa-newspaper"></i><p>Loading magazines…</p></div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div><!-- /panel-grid -->
+        <div id="admin-dashboard-root"></div>
       </div><!-- /tab-magazines -->
 
     </div><!-- /admin-body -->
@@ -302,6 +222,7 @@
 <!-- Toast notification -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script type="module" src="/src/admin-dashboard-entry.jsx"></script>
 <script type="module" src="/src/script.js"></script>
 <script type="module" src="/src/hero-stars.js"></script>
 
@@ -351,7 +272,6 @@ function initDashboard(user) {
   document.body.classList.add('auth-ready');
 
   loadBooks();
-  loadMagazines();
 }
 
 async function handleLogout() {
@@ -642,166 +562,6 @@ window.loadBooks = loadBooks;
 window.editBook = editBook;
 window.saveBook = saveBook;
 window.deleteBook = deleteBook;
-
-/* ════════════════════════════════════════════════════════════
-   MAGAZINES
-   ════════════════════════════════════════════════════════════ */
-
-/* — Upload — */
-document.getElementById('mag-upload-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearError('m-error');
-
-  const title = document.getElementById('m-title').value.trim();
-  const desc  = document.getElementById('m-description').value.trim();
-  const cover = document.getElementById('m-cover-file').files[0];
-  const pdf   = document.getElementById('m-pdf-file').files[0];
-
-  if (!title) { showError('m-error', 'Title is required.'); return; }
-  if (!cover) { showError('m-error', 'Please select a cover image.'); return; }
-  if (!pdf)   { showError('m-error', 'Please select a PDF file.');   return; }
-
-  const btn = document.getElementById('m-submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Uploading…';
-
-  try {
-    setProgress('m', 20, 'Uploading cover image…');
-    const coverResult = await uploadFile('magazines/covers', cover);
-
-    setProgress('m', 60, 'Uploading PDF…');
-    const pdfResult = await uploadFile('magazines/pdfs', pdf);
-
-    setProgress('m', 90, 'Saving to database…');
-    const { error } = await supabase.from('magazines').insert([{
-      title, description: desc, cover_url: coverResult.publicUrl, pdf_url: pdfResult.publicUrl
-    }]);
-    if (error) throw new Error(error.message);
-
-    setProgress('m', 100, 'Done!');
-    hideProgress('m');
-    showToast('Magazine uploaded successfully!');
-    document.getElementById('mag-upload-form').reset();
-    ['m-cover-name','m-pdf-name'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
-    uploadsToday++;
-    document.getElementById('stat-uploads').textContent = uploadsToday;
-    loadMagazines();
-  } catch (err) {
-    hideProgress('m');
-    showError('m-error', err.message);
-    showToast(err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-upload"></i> Upload Magazine';
-  }
-});
-
-/* — Load Magazines — */
-async function loadMagazines() {
-  const tbody = document.getElementById('mags-tbody');
-  tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
-
-  const { data, error } = await supabase.from('magazines').select('*').order('created_at', { ascending: false });
-  if (error) {
-    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load magazines.</p></div></td></tr>';
-    return;
-  }
-
-  document.getElementById('stat-magazines').textContent = data.length;
-
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><i class="fas fa-newspaper"></i><p>No magazines yet. Upload your first one!</p></div></td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = data.map(mag => `
-    <tr id="mag-row-${mag.id}">
-      <td>
-        ${mag.cover_url
-          ? `<img class="item-thumb" src="${escHtml(mag.cover_url)}" alt="${escHtml(mag.title)}" loading="lazy">`
-          : `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`}
-      </td>
-      <td>
-        <div class="item-title">${escHtml(mag.title)}</div>
-        <div class="item-meta">${escHtml(mag.description || '')}</div>
-      </td>
-      <td>
-        <div class="action-group">
-          <button class="btn btn-orange btn-sm" onclick="editMagazine('${mag.id}')">
-            <i class="fas fa-edit"></i> Edit
-          </button>
-          <button class="btn btn-red btn-sm" onclick="deleteMagazine('${mag.id}', '${escHtml(mag.cover_url || '')}', '${escHtml(mag.pdf_url || '')}')">
-            <i class="fas fa-trash"></i> Delete
-          </button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-}
-window.loadMagazines = loadMagazines;
-
-/* — Edit Magazine inline — */
-async function editMagazine(id) {
-  const { data, error } = await supabase.from('magazines').select('*').eq('id', id).single();
-  if (error) { showToast('Could not load magazine data.', 'error'); return; }
-
-  const row = document.getElementById('mag-row-' + id);
-  row.classList.add('edit-row');
-  row.innerHTML = `
-    <td colspan="2" style="padding:.8rem">
-      <div style="display:grid;grid-template-columns:1fr;gap:.6rem">
-        <input id="edit-m-title-${id}" value="${escAttr(data.title)}" placeholder="Title" style="font-weight:700" />
-        <input id="edit-m-desc-${id}"  value="${escAttr(data.description || '')}" placeholder="Description" />
-      </div>
-    </td>
-    <td>
-      <div class="action-group" style="flex-direction:column;align-items:stretch">
-        <button class="btn btn-green btn-sm" onclick="saveMagazine('${id}')">
-          <i class="fas fa-check"></i> Save
-        </button>
-        <button class="btn btn-ghost btn-sm" onclick="loadMagazines()" style="margin-top:.3rem">
-          Cancel
-        </button>
-      </div>
-    </td>
-  `;
-}
-window.editMagazine = editMagazine;
-
-async function saveMagazine(id) {
-  const title = document.getElementById('edit-m-title-' + id).value.trim();
-  const desc  = document.getElementById('edit-m-desc-' + id).value.trim();
-
-  if (!title) { showToast('Title cannot be empty.', 'error'); return; }
-
-  const { error } = await supabase.from('magazines').update({ title, description: desc }).eq('id', id);
-  if (error) { showToast('Failed to save: ' + error.message, 'error'); return; }
-  showToast('Magazine updated!');
-  loadMagazines();
-}
-window.saveMagazine = saveMagazine;
-
-/* — Delete Magazine — */
-async function deleteMagazine(id, coverUrl, pdfUrl) {
-  if (!confirm('Delete this magazine? This cannot be undone.')) return;
-
-  const pathFromUrl = (url) => {
-    try {
-      const u = new URL(url);
-      const parts = u.pathname.split('/object/public/' + BUCKET + '/');
-      return parts[1] ? decodeURIComponent(parts[1]) : null;
-    } catch { return null; }
-  };
-
-  const toRemove = [coverUrl, pdfUrl].map(pathFromUrl).filter(Boolean);
-  if (toRemove.length) await supabase.storage.from(BUCKET).remove(toRemove);
-
-  const { error } = await supabase.from('magazines').delete().eq('id', id);
-  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
-  showToast('Magazine deleted.');
-  loadMagazines();
-}
-window.deleteMagazine = deleteMagazine;
 
 /* ════════════════════════════════════════════════════════════
    MOBILE SIDEBAR

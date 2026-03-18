@@ -15,9 +15,10 @@
     body { visibility: hidden; }
     body.auth-ready { visibility: visible; }
   </style>
-  <script type="module" crossorigin src="/assets/admin/dashboard-BmIvv55c.js"></script>
+  <script type="module" crossorigin src="/assets/admin/dashboard-Cz0UZaQn.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-CMChvdDX.js">
   <link rel="modulepreload" crossorigin href="/assets/hero-stars-BadzpYtY.js">
-  <link rel="modulepreload" crossorigin href="/assets/supabase-client-PZdivSTP.js">
+  <link rel="modulepreload" crossorigin href="/assets/supabase-client-BghD-4Gb.js">
   <link rel="stylesheet" crossorigin href="/assets/admin-CVTHDKE7.css">
 </head>
 <body>
@@ -215,87 +216,7 @@
 
       <!-- ════ MAGAZINES TAB ════ -->
       <div class="tab-panel" id="tab-magazines">
-        <div class="panel-grid">
-
-          <!-- Upload form -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i class="fas fa-plus-circle"></i> Upload New Magazine</h3>
-            </div>
-            <div class="card-body">
-              <form id="mag-upload-form" novalidate>
-
-                <div class="form-field">
-                  <label for="m-title">Title *</label>
-                  <input type="text" id="m-title" placeholder="e.g. Junior Science Vol 3" required />
-                </div>
-
-                <div class="form-field">
-                  <label for="m-description">Description</label>
-                  <textarea id="m-description" placeholder="What's inside this issue…" rows="3"></textarea>
-                </div>
-
-                <div class="form-field">
-                  <label>Cover Image *</label>
-                  <div class="file-drop" id="m-cover-drop">
-                    <input type="file" id="m-cover-file" accept="image/*" />
-                    <div class="file-icon"><i class="fas fa-image"></i></div>
-                    <div class="file-hint">Click or drag an image here</div>
-                    <div class="file-name" id="m-cover-name"></div>
-                  </div>
-                </div>
-
-                <div class="form-field">
-                  <label>PDF File *</label>
-                  <div class="file-drop" id="m-pdf-drop">
-                    <input type="file" id="m-pdf-file" accept="application/pdf" />
-                    <div class="file-icon"><i class="fas fa-file-pdf"></i></div>
-                    <div class="file-hint">Click or drag a PDF here</div>
-                    <div class="file-name" id="m-pdf-name"></div>
-                  </div>
-                </div>
-
-                <div class="upload-progress" id="m-progress">
-                  <div class="progress-label" id="m-progress-label">Uploading…</div>
-                  <div class="progress-bar-wrap">
-                    <div class="progress-bar" id="m-progress-bar"></div>
-                  </div>
-                </div>
-
-                <div class="error-msg" id="m-error"></div>
-
-                <button type="submit" class="btn btn-green" id="m-submit-btn" style="margin-top:.8rem;width:100%">
-                  <i class="fas fa-upload"></i> Upload Magazine
-                </button>
-              </form>
-            </div>
-          </div>
-
-          <!-- Magazine list -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i class="fas fa-list"></i> All Magazines</h3>
-              <button class="btn btn-ghost btn-sm" onclick="loadMagazines()">
-                <i class="fas fa-sync-alt"></i> Refresh
-              </button>
-            </div>
-            <div style="overflow-x:auto">
-              <table class="items-table" id="mags-table">
-                <thead>
-                  <tr>
-                    <th>Cover</th>
-                    <th>Title / Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="mags-tbody">
-                  <tr><td colspan="3"><div class="empty-state"><i class="fas fa-newspaper"></i><p>Loading magazines…</p></div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div><!-- /panel-grid -->
+        <div id="admin-dashboard-root"></div>
       </div><!-- /tab-magazines -->
 
     </div><!-- /admin-body -->

@@ -476,9 +476,7 @@
       </p>
     </div>
 
-    <section class="catalogue-section">
-      <div id="magazine-list" class="product-grid"></div>
-    </section>
+    <div id="magazines-root" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;"></div>
   </main>
 
   <div id="react-reader-root"></div>
@@ -508,117 +506,9 @@
   <div class="menu-backdrop" id="menu-backdrop"></div>
 
   <script type="module" src="/src/reader-modal-entry.js"></script>
+  <script type="module" src="/src/magazines-page-entry.jsx"></script>
   <script type="module" src="/src/script.js"></script>
   <script type="module" src="/src/hero-stars.js"></script>
-  <script type="module">
-    import { supabase } from '/src/supabase-client.js';
-
-    /* ── Fetch and render magazines from Supabase ──────────────── */
-    const magazineList = document.getElementById('magazine-list');
-
-    function escHtml(str) {
-      return String(str || '')
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    }
-
-    function resolvePublicPdfUrl(filePath) {
-      console.log("File path:", filePath);
-      if (!filePath) return '';
-      if (/^(https?:|data:|blob:)/i.test(filePath)) {
-        return filePath;
-      }
-      if (filePath.includes('/storage/v1/object/public/')) {
-        return filePath;
-      }
-      const parts = String(filePath).split('/');
-      if (parts.length < 2) {
-        console.warn("Unknown storage path format:", filePath);
-        return filePath;
-      }
-      const bucket = parts.shift();
-      const path = parts.join('/');
-      const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path);
-      console.log("Public URL:", publicData?.publicUrl);
-      return publicData?.publicUrl || filePath;
-    }
-
-    async function fetchMagazines() {
-      if (!magazineList) return;
-
-      magazineList.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#94a3b8">
-          <i class="fas fa-circle-notch fa-spin" style="font-size:1.8rem;margin-bottom:.6rem;display:block"></i>
-          Loading magazines…
-        </div>`;
-
-      const { data, error } = await supabase
-        .from('magazines')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        magazineList.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#dc2626">Failed to load magazines. Please try again later.</div>`;
-        console.error('Fetch magazines error:', error);
-        return;
-      }
-
-      console.log("Books from DB:", data);
-
-      if (!data || !data.length) {
-        magazineList.innerHTML = `
-          <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#94a3b8">
-            <i class="fas fa-newspaper" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:.8rem"></i>
-            No magazines available yet. Check back soon!
-          </div>`;
-        return;
-      }
-
-      magazineList.innerHTML = data.map(mag => {
-        const pdfUrl = resolvePublicPdfUrl(mag.pdf_url);
-        return `
-        <div class="product-card" data-book="${escHtml(pdfUrl)}" role="button" tabindex="0"
-             aria-label="Read ${escHtml(mag.title)}"
-             style="cursor:pointer;">
-          <div class="product-img-container">
-            ${mag.cover_url
-              ? `<img src="${escHtml(mag.cover_url)}" alt="${escHtml(mag.title)} cover" loading="lazy" width="300" height="400" />`
-              : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;color:#94a3b8;font-size:2rem"><i class="fas fa-newspaper"></i></div>`
-            }
-          </div>
-          <div class="product-info">
-            <div class="product-title">${escHtml(mag.title)}</div>
-            ${mag.description ? `<div class="product-author" style="font-size:.88rem;color:#555;margin-bottom:.5rem">${escHtml(mag.description)}</div>` : ''}
-            <a href="reader.html?book=${encodeURIComponent(pdfUrl || '')}" class="read-btn"
-               style="display:inline-flex;align-items:center;gap:.35rem;margin-top:.4rem;padding:.35rem .8rem;
-                      background:#1e3799;color:#fff;border-radius:8px;font-size:.82rem;font-weight:700;
-                      text-decoration:none;transition:background .2s;"
-               onclick="event.stopPropagation()">
-              <i class="fas fa-book-reader"></i> Read
-            </a>
-          </div>
-        </div>
-      `;
-      }).join('');
-
-      /* hook up click-to-open-reader for each card */
-      magazineList.querySelectorAll('.product-card[data-book]').forEach(card => {
-        card.addEventListener('click', () => {
-          console.log("Opening reader with:", card.dataset.book);
-          if (window.openBookReader) window.openBookReader(card.dataset.book);
-        });
-        card.addEventListener('keydown', (e) => {
-          if ((e.key === 'Enter' || e.key === ' ') && window.openBookReader) {
-            e.preventDefault();
-            console.log("Opening reader with:", card.dataset.book);
-            window.openBookReader(card.dataset.book);
-          }
-        });
-      });
-    }
-
-    fetchMagazines();
-  </script>
 </body>
 
 </html>

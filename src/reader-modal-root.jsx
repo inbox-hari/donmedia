@@ -5,12 +5,17 @@ import FlipbookReader from './components/FlipbookReader';
 const ReaderModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
+  const [readerTitle, setReaderTitle] = useState('');
 
   useEffect(() => {
     // Listen for custom event to open reader
     const handleOpen = (e) => {
-      console.log("Opening reader with:", e.detail?.url);
-      setPdfUrl(e.detail.url);
+      const detail = e.detail;
+      const nextPdfUrl = typeof detail === 'string' ? detail : detail?.pdfUrl || detail?.url || '';
+      const nextTitle = typeof detail === 'string' ? '' : detail?.title || '';
+      console.log("Opening reader with:", nextPdfUrl);
+      setPdfUrl(nextPdfUrl);
+      setReaderTitle(nextTitle);
       setIsOpen(true);
       document.body.style.overflow = 'hidden';
     };
@@ -18,9 +23,10 @@ const ReaderModal = () => {
     window.addEventListener('open-pdf-reader', handleOpen);
     
     // Attach to window for legacy support
-    window.openBookReader = (url) => {
-      console.log("Opening reader with:", url);
-      window.dispatchEvent(new CustomEvent('open-pdf-reader', { detail: { url } }));
+    window.openBookReader = (payload) => {
+      const detail = typeof payload === 'string' ? { url: payload } : payload;
+      console.log("Opening reader with:", detail?.pdfUrl || detail?.url);
+      window.dispatchEvent(new CustomEvent('open-pdf-reader', { detail }));
     };
 
     return () => window.removeEventListener('open-pdf-reader', handleOpen);
@@ -47,9 +53,21 @@ const ReaderModal = () => {
       <div className="reader-toolbar" style={{ 
         padding: '1rem', 
         display: 'flex', 
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         background: 'rgba(0,0,0,0.5)'
       }}>
+        <div style={{
+          color: 'white',
+          fontWeight: 700,
+          fontSize: '1rem',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          paddingRight: '1rem'
+        }}>
+          {readerTitle || 'Reader'}
+        </div>
         <button onClick={handleClose} style={{
           background: 'none',
           border: 'none',
