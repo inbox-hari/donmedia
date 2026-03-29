@@ -485,9 +485,24 @@ async function loadBooks() {
   const tbody = document.getElementById('books-tbody');
   tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
 
-  const { data, error } = await supabase.from('books').select('*').order('created_at', { ascending: false });
+  const { data, error } = await safeQuery(() => 
+    supabase
+      .from('books')
+      .select('*')
+      .order('created_at', { ascending: false })
+  );
+
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load books.</p></div></td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4">
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle" style="color:#ef4444"></i>
+            <p>Failed to load books.</p>
+            <small style="opacity:0.6">${error.message} (${error.code})</small>
+          </div>
+        </td>
+      </tr>`;
     return;
   }
 

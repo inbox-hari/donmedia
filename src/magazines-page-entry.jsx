@@ -21,17 +21,21 @@ const MagazinesPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      try {
-        const { data, error } = await supabase.from('categories').select('*').order('position', { ascending: true });
-        if (error) throw error;
+      const { data, error } = await safeQuery(() => 
+        supabase
+          .from('categories')
+          .select('*')
+          .order('position', { ascending: true })
+      );
+      
+      if (error) {
+        setError(`${error.message} (${error.code})`);
+      } else {
         const cats = data || [];
         setCurrentCats(cats.filter(c => c.type === 'current'));
         setOldCats(cats.filter(c => !c.type || c.type === 'old'));
-      } catch (err) { 
-        setError(err.message); 
-      } finally { 
-        setLoading(false); 
       }
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -40,6 +44,15 @@ const MagazinesPage = () => {
     <div style={{ textAlign: 'center', padding: '5rem' }}>
       <i className="fas fa-circle-notch fa-spin" style={{ fontSize: '1.8rem', color: '#1e3799' }}></i>
       <p style={{ marginTop: '1rem', color: '#94a3b8', fontWeight: '600' }}>Loading magazines...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{ textAlign: 'center', padding: '5rem', color: '#ef4444' }}>
+      <i className="fas fa-exclamation-circle" style={{ fontSize: '2rem', marginBottom: '1rem' }}></i>
+      <h3>Unable to load magazines</h3>
+      <p style={{ opacity: 0.7 }}>{error}</p>
+      <button onClick={() => window.location.reload()} className="mag-btn" style={{ margin: '1rem auto' }}>Retry</button>
     </div>
   );
 

@@ -37,30 +37,37 @@ export const supabase = getSupabase();
 /**
  * Standardized Error Handling & Retry Wrapper
  * Use this to wrap your supabase queries:
- * const { data, error } = await safeQuery(supabase.from('table').select('*'));
+ * const { data, error } = await safeQuery(() => supabase.from('table').select('*'));
  */
-export async function safeQuery(queryPromise, retries = 3, delay = 1000) {
+export async function safeQuery(queryFn, retries = 3, delay = 1000) {
   let lastError = null;
 
   for (let i = 0; i < retries; i++) {
     try {
-      const { data, error } = await queryPromise;
+      const { data, error } = await queryFn();
       if (!error) return { data, error: null };
       
       lastError = error;
-      // If it's a network error, we might want to retry. 
-      // If it's a 400/403/404, we shouldn't retry.
-      if (error.code && !['PGRST116', '42P01'].includes(error.code)) {
-         console.warn(`Query failed (attempt ${i + 1}/${retries}):`, error.message);
-         if (i < retries - 1) await new Promise(res => setTimeout(res, delay * (i + 1)));
-      } else {
-        // Break early for fixed errors (like bad requests)
-        break;
+      // Diagnostic logging
+      console.error(`[Supabase Query Error] Attempt ${i + 1}/${retries}:`, {
+        message: error.message,
+        hint: error.hint,
+        details: error.details,
+        code: error.code
+      });
+
+      // Don't retry if it's a fixed error (Relation not found, or bad syntax)
+      if (['42P01', 'PGRST116', 'PGRST204'].includes(error.code)) break;
+
+      if (i < retries - 1) {
+        await new Promise(res => setTimeout(res, delay * (i + 1)));
       }
     } catch (err) {
       lastError = err;
-      console.error(`Unexpected query crash (attempt ${i + 1}/${retries}):`, err);
-      if (i < retries - 1) await new Promise(res => setTimeout(res, delay * (i + 1)));
+      console.error(`[Supabase Crash] Attempt ${i + 1}/${retries}:`, err);
+      if (i < retries - 1) {
+        await new Promise(res => setTimeout(res, delay * (i + 1)));
+      }
     }
   }
 
@@ -71,8 +78,10 @@ export async function safeQuery(queryPromise, retries = 3, delay = 1000) {
 if (typeof window !== 'undefined') {
   window.supabase = supabase;
   window._supabase = supabase;
+  window.safeQuery = safeQuery;
 }
 
 // GlobalThis for module-insensitive access
 globalThis.supabase = supabase;
 globalThis._supabase = supabase;
+globalThis.safeQuery = safeQuery;

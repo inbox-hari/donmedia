@@ -552,13 +552,20 @@
           Loading books…
         </div>`;
 
-      const { data, error } = await supabase
-        .from('books')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await safeQuery(() => 
+        supabase
+          .from('books')
+          .select('*')
+          .order('created_at', { ascending: false })
+      );
 
       if (error) {
-        bookList.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#dc2626">Failed to load books. Please try again later.</div>`;
+        bookList.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#dc2626">
+            <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;display:block"></i>
+            <strong>Failed to load books.</strong><br>
+            <span style="font-size:0.8rem;opacity:0.7">${error.message || 'Unknown error'} (${error.code || 'No code'})</span>
+          </div>`;
         console.error('Fetch books error:', error);
         return;
       }
