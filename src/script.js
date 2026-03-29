@@ -55,10 +55,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (beeMascot || butterflyMascot || grasshopperMascot) {
+    const header = document.querySelector(".usborne-header");
     const waveClass = "bee-wave";
     const eyeTargets = [];
     let pendingFrame = null;
     let latestPoint = null;
+    let isHeaderVisible = true;
+
+    // Use IntersectionObserver to stop heavy logic when header is off-screen
+    if (!!window.IntersectionObserver && header) {
+      const observer = new IntersectionObserver((entries) => {
+        isHeaderVisible = entries[entries.length - 1].isIntersecting;
+      }, { threshold: 0.1 });
+      observer.observe(header);
+    }
 
     if (beeMascot) {
       eyeTargets.push({
@@ -89,6 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const applyEyePosition = () => {
       pendingFrame = null;
+      if (!isHeaderVisible) return; // SKIP HEAVY CALC IF OFF-SCREEN
+      
       if (!latestPoint) {
         eyeTargets.forEach((target) => {
           target.element.style.setProperty(target.varX, "0px");
@@ -118,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const scheduleEyeUpdate = (point) => {
+      if (!isHeaderVisible) return;
       latestPoint = point;
       if (pendingFrame) {
         return;
@@ -151,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener(
       "touchmove",
       (event) => {
-        if (!event.touches || !event.touches.length) {
+        if (!isHeaderVisible || !event.touches || !event.touches.length) {
           return;
         }
         const touch = event.touches[0];

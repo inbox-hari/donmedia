@@ -230,6 +230,7 @@
 <!-- ── JavaScript ────────────────────────────────────────────── -->
 <script type="module">
 import { supabase } from '/src/supabase-client.js';
+import { optimizeImageUpload } from '/src/image-upload.js';
 
 /* — Admin State — */
 let currentUser = null;
@@ -272,6 +273,34 @@ function initDashboard(user) {
   document.body.classList.add('auth-ready');
 
   loadBooks();
+  loadDynamicSidebar();
+}
+
+async function loadDynamicSidebar() {
+  const { data: categoryData } = await supabase.from('categories').select('*').order('position', { ascending: true });
+  
+  const navMag = document.getElementById('nav-magazines');
+  if (!navMag) return;
+
+  // Sub-menu for individual magazine categories
+  let subMenu = document.getElementById('mag-sub-menu');
+  if (!subMenu) {
+    subMenu = document.createElement('div');
+    subMenu.id = 'mag-sub-menu';
+    subMenu.className = 'sidebar-sub-nav';
+    subMenu.style.paddingLeft = '1.2rem';
+    subMenu.style.marginTop = '0.5rem';
+    subMenu.style.display = 'block'; 
+    navMag.after(subMenu);
+  }
+
+  subMenu.innerHTML = (categoryData || []).map(c => {
+    return `
+      <a href="/admin/category-manage.html?id=${c.id}" class="sub-nav-item" style="font-size: 0.9rem; color: #cbd5e1; padding: 0.4rem 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; border-radius: 6px; transition: background 0.2s;">
+        <i class="fas fa-folder" style="font-size: 0.6rem; opacity: 0.5;"></i> ${escHtml(c.name)}
+      </a>
+    `;
+  }).join('');
 }
 
 async function handleLogout() {
@@ -337,8 +366,6 @@ function bindFilePicker(inputId, nameId) {
 }
 bindFilePicker('b-cover-file', 'b-cover-name');
 bindFilePicker('b-pdf-file',   'b-pdf-name');
-bindFilePicker('m-cover-file', 'm-cover-name');
-bindFilePicker('m-pdf-file',   'm-pdf-name');
 
 /* ════════════════════════════════════════════════════════════
    TAB SWITCHING
@@ -419,7 +446,8 @@ document.getElementById('book-upload-form').addEventListener('submit', async (e)
 
   try {
     setProgress('b', 20, 'Uploading cover image…');
-    const coverResult = await uploadFile('books/covers', cover);
+    const optimizedCover = await optimizeImageUpload(cover, { maxWidth: 900, maxHeight: 1200, quality: 0.76 });
+    const coverResult = await uploadFile('books/covers', optimizedCover);
 
     setProgress('b', 60, 'Uploading PDF…');
     const pdfResult = await uploadFile('books/pdfs', pdf);
@@ -474,7 +502,7 @@ async function loadBooks() {
     <tr id="book-row-${book.id}">
       <td>
         ${book.cover_url
-          ? `<img class="item-thumb" src="${escHtml(book.cover_url)}" alt="${escHtml(book.title)}" loading="lazy">`
+          ? `<img class="item-thumb" src="${escHtml(getOptimizedImageUrl(book.cover_url, 120, 160, 60))}" alt="${escHtml(book.title)}" loading="lazy" width="60" height="80">`
           : `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`}
       </td>
       <td>
@@ -590,6 +618,24 @@ function escHtml(str) {
 }
 function escAttr(str) {
   return String(str).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+function getOptimizedImageUrl(publicUrl, width, height, quality = 70) {
+  if (!publicUrl) return publicUrl;
+  try {
+    const url = new URL(publicUrl);
+    if (!url.pathname.includes('/storage/v1/object/public/')) {
+      return publicUrl;
+    }
+    url.pathname = url.pathname.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+    if (width) url.searchParams.set('width', String(width));
+    if (height) url.searchParams.set('height', String(height));
+    url.searchParams.set('quality', String(quality));
+    url.searchParams.set('resize', 'cover');
+    return url.toString();
+  } catch {
+    return publicUrl;
+  }
 }
 
 </script>

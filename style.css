@@ -617,6 +617,7 @@ h6 {
   --bee-eye-x: 0px;
   --bee-eye-y: 0px;
   overflow: visible;
+  will-change: transform;
 }
 
 .butterfly-mascot {
@@ -627,6 +628,7 @@ h6 {
   --butterfly-eye-x: 0px;
   --butterfly-eye-y: 0px;
   overflow: visible;
+  will-change: transform;
 }
 
 .grasshopper-mascot {
@@ -635,6 +637,7 @@ h6 {
   --grass-eye-x: 0px;
   --grass-eye-y: 0px;
   pointer-events: none;
+  will-change: transform;
 }
 
 .bee-float {

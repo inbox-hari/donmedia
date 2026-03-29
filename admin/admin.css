@@ -481,24 +481,25 @@ body {
   white-space: nowrap;
 }
 .items-table td {
-  padding: 0.85rem 0.8rem;
+  padding: 1.25rem 1rem;
   border-bottom: 1px solid var(--border);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   vertical-align: middle;
 }
 .items-table tr:hover td { background: #f8fafc; }
 .items-table tr:last-child td { border-bottom: none; }
 
 .item-thumb {
-  width: 48px; height: 62px;
+  width: 60px; height: 80px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--border);
   flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 .item-thumb-placeholder {
-  width: 48px; height: 62px;
-  border-radius: 6px;
+  width: 60px; height: 80px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   display: flex; align-items: center; justify-content: center;
   color: #94a3b8;

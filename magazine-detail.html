@@ -4,22 +4,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flipbook Reader | Donmedia Publications</title>
+  <title>Magazine Issues | Donmedia Publications</title>
+  <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script type="module" crossorigin src="/assets/reader-BIgAhxy7.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-DOGvGpb-.js">
-  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-3xzlJT5O.js">
-  <link rel="modulepreload" crossorigin href="/assets/FlipbookReader-CE3Ejq7o.js">
-  <link rel="modulepreload" crossorigin href="/assets/hero-stars-DmEzxE10.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-02afl5VC.css">
 </head>
 
 <body>
-  <header class="usborne-header">
-    <div class="usborne-top-bar"></div>
+  <header class="usborne-header"><div class="usborne-top-bar">
+      <span style="height: 2px;"></span>
+    </div>
     <nav class="usborne-nav">
       <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
         <i class="fas fa-bars"></i>
@@ -27,19 +25,19 @@
       <a href="index.html" class="logo">
         <div class="logo-title">
           <i class="fas fa-hotairballoon" style="color: #e11d48"></i>
-          Donmedia
+          DONMEDIA
         </div>
         <div class="logo-subtitle">Be Curious.</div>
       </a>
+
       <ul class="desktop-nav">
         <li><a href="index.html">Home</a></li>
         <li><a href="about.html">About Us</a></li>
         <li class="dropdown">
           <div class="store-nav-wrapper">
-            <a href="store.html">Store</a>
-            <button class="dropdown-toggle toggle-icon" type="button" aria-expanded="false">
-              <i class="fas fa-chevron-down caret-icon"></i>
-            </button>
+            <a href="store.html" class="active">Store</a>
+            <button class="dropdown-toggle toggle-icon" type="button" aria-expanded="false"><i
+                class="fas fa-chevron-down caret-icon"></i></button>
           </div>
           <ul class="dropdown-menu">
             <li><a href="book-store.html">Book Store</a></li>
@@ -50,15 +48,21 @@
         </li>
         <li><a href="contact.html">Contact Us</a></li>
       </ul>
+
+      <div class="search-icon"><i class="fas fa-search"></i></div>
     </nav>
   </header>
 
-  <main class="main-content">
-    <div id="standalone-reader-root"></div>
+  <main class="main-content" style="background-color: #ffffff; padding-top: 2rem">
+    <div id="magazine-detail-root" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;"></div>
   </main>
 
-  <div class="menu-backdrop" id="menu-backdrop"></div>
-
+  <div id="react-reader-root"></div>
+  
+  <script type="module" src="/src/reader-modal-entry.js"></script>
+  <script type="module" src="/src/magazine-detail-entry.jsx"></script>
+  <script type="module" src="/src/script.js"></script>
+  <script type="module" src="/src/hero-stars.js"></script>
 </body>
 
 </html>

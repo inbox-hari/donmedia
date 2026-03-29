@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase-client';
 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import MagazineIssueManager from './MagazineIssueManager';
+
 const BUCKET = 'donmedia';
 
 const extractStoragePath = (publicUrl) => {
@@ -16,190 +34,156 @@ const extractStoragePath = (publicUrl) => {
   }
 };
 
-const MagazineCategory = ({ category }) => {
-  const [magazines, setMagazines] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [formState, setFormState] = useState({
-    title: '',
-    description: '',
-    cover_image: null,
-    pdf_file: null,
-  });
+// --- Sortable Item Component ---
+const SortableMagazine = ({ magazine, onDelete }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: magazine.id });
 
-  const fetchMagazines = async () => {
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    padding: '0.8rem 1rem',
+    background: '#fff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    marginBottom: '0.5rem',
+    boxShadow: isDragging ? '0 8px 16px rgba(0,0,0,0.1)' : 'none',
+    zIndex: isDragging ? 100 : 1,
+    position: 'relative'
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <div {...listeners} style={{ cursor: 'grab', color: '#cbd5e1', padding: '0.4rem' }}>
+        <i className="fas fa-grip-vertical"></i>
+      </div>
+      
+      <img 
+        src={magazine.cover_url} 
+        alt="" 
+        width="40"
+        height="54"
+        style={{ width: '40px', height: '54px', objectFit: 'cover', borderRadius: '4px', background: '#f8fafc' }} 
+      />
+
+      <div style={{ flexGrow: 1 }}>
+        <div style={{ fontWeight: '700', color: '#1e293b' }}>{magazine.title}</div>
+        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+          {magazine.month} {magazine.year}
+        </div>
+      </div>
+
+      <button 
+        onClick={() => onDelete(magazine.id, magazine.cover_url, magazine.pdf_url)}
+        className="btn btn-red btn-sm" 
+        style={{ padding: '4px 8px', borderRadius: '6px' }}
+      >
+        <i className="fas fa-trash"></i>
+      </button>
+    </div>
+  );
+};
+
+
+const MagazineCategory = ({ category }) => {
+  const [titles, setTitles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({ name: '' });
+  const [selectedTitle, setSelectedTitle] = useState(null);
+
+  const fetchTitles = async () => {
     setLoading(true);
-    setError(null);
     try {
       const { data, error } = await supabase
-        .from('magazines')
+        .from('magazine_titles')
         .select('*')
-        .ilike('category', category)
+        .eq('category_id', category.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setMagazines(data);
-    } catch (error) {
-      setError(error.message);
+      setTitles(data || []);
+    } catch (err) {
+      console.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchMagazines();
-  }, [category]);
+  useEffect(() => { fetchTitles(); }, [category.id]);
 
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormState(prevState => ({
-      ...prevState,
-      [name]: files ? files[0] : value,
-    }));
-  };
-
-  const handleUpload = async (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
+    if (!form.name) return alert('Name is required');
     setUploading(true);
-    setError(null);
-
-    const { title, description, cover_image, pdf_file } = formState;
-
-    if (!title || !cover_image || !pdf_file) {
-      setError('Title, cover image, and PDF file are required.');
-      setUploading(false);
-      return;
-    }
-
     try {
-      // 1. Upload cover image
-      const safeName = cover_image.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const coverPath = `magazines/covers/${category}/${Date.now()}-${safeName}`;
-      const { error: coverError } = await supabase.storage
-        .from(BUCKET)
-        .upload(coverPath, cover_image);
-      if (coverError) throw coverError;
-      const { data: { publicUrl: cover_url } } = supabase.storage
-        .from(BUCKET)
-        .getPublicUrl(coverPath);
-
-      // 2. Upload PDF file
-      const safePdfName = pdf_file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const pdfPath = `magazines/pdfs/${category}/${Date.now()}-${safePdfName}`;
-      const { error: pdfError } = await supabase.storage
-        .from(BUCKET)
-        .upload(pdfPath, pdf_file);
-      if (pdfError) throw pdfError;
-      const { data: { publicUrl: pdf_url } } = supabase.storage
-        .from(BUCKET)
-        .getPublicUrl(pdfPath);
-
-      // 3. Insert into database
-      const { error: dbError } = await supabase.from('magazines').insert([
-        { title, description, category, cover_url, pdf_url },
-      ]);
-      if (dbError) throw dbError;
-
-      setFormState({ title: '', description: '', cover_image: null, pdf_file: null });
-      e.target.reset();
-      fetchMagazines();
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setUploading(false);
-    }
+      await supabase.from('magazine_titles').insert([{
+        name: form.name,
+        category_id: category.id
+      }]);
+      setForm({ name: '' });
+      fetchTitles();
+    } catch (err) { alert(err.message); } finally { setUploading(false); }
   };
 
-  const handleDelete = async (id, cover_url, pdf_url) => {
-    if (!confirm('Are you sure you want to delete this magazine?')) return;
-
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this publication title?')) return;
     try {
-      // 1. Delete from database
-      const { error: dbError } = await supabase.from('magazines').delete().eq('id', id);
-      if (dbError) throw dbError;
-
-      // 2. Delete cover from storage
-      if (cover_url) {
-        const coverPath = extractStoragePath(cover_url);
-        if (coverPath) {
-          const { error: coverErr } = await supabase.storage.from(BUCKET).remove([coverPath]);
-          if (coverErr) throw coverErr;
-        }
-      }
-      // 3. Delete PDF from storage
-      if (pdf_url) {
-        const pdfPath = extractStoragePath(pdf_url);
-        if (pdfPath) {
-          const { error: pdfErr } = await supabase.storage.from(BUCKET).remove([pdfPath]);
-          if (pdfErr) throw pdfErr;
-        }
-      }
-
-      fetchMagazines();
-    } catch (error) {
-      setError(error.message);
-    }
+      await supabase.from('magazine_titles').delete().eq('id', id);
+      fetchTitles();
+    } catch (err) { alert(err.message); }
   };
+
+  if (selectedTitle) {
+    return <MagazineIssueManager title={selectedTitle} onBack={() => setSelectedTitle(null)} />;
+  }
 
   return (
-    <div className="mag-cat-section">
-      <h2 className="mag-cat-header">{category}</h2>
-      <div className="mag-grid">
-        <div className="card">
-          <div className="card-header">
-            <h3>Upload New Magazine</h3>
-          </div>
-          <div className="card-body">
-            <form onSubmit={handleUpload}>
-              <div className="form-field">
-                <label htmlFor="title">Title</label>
-                <input type="text" name="title" onChange={handleInputChange} placeholder="Magazine Title" required />
-              </div>
-              <div className="form-field">
-                <label htmlFor="description">Description</label>
-                <textarea name="description" onChange={handleInputChange} placeholder="Magazine Description"></textarea>
-              </div>
-              <div className="form-field">
-                <label htmlFor="cover_image">Cover Image</label>
-                <input type="file" name="cover_image" onChange={handleInputChange} accept="image/*" required />
-              </div>
-              <div className="form-field">
-                <label htmlFor="pdf_file">PDF File</label>
-                <input type="file" name="pdf_file" onChange={handleInputChange} accept="application/pdf" required />
-              </div>
-              <button type="submit" className="btn btn-green" disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Upload'}
-              </button>
-              {error && <div className="error-msg show">{error}</div>}
-            </form>
-          </div>
-        </div>
-        <div className="card">
-          <div className="card-header">
-            <h3>{category} Magazines</h3>
-            <button className="btn btn-ghost btn-sm" onClick={fetchMagazines} disabled={loading}>
-              {loading ? 'Refreshing...' : 'Refresh'}
+    <div className="mag-title-manager" style={{ padding: '2rem', background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 350px) 1fr', gap: '3rem', alignItems: 'start' }}>
+        
+        <div className="card" style={{ padding: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+          <h3 style={{ marginTop: 0 }}>Add Publication Title</h3>
+          <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Examples: "Tell Me More", "Applebees", etc.</p>
+          <form onSubmit={handleCreate}>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.4rem' }}>Title Name:</label>
+              <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} required />
+            </div>
+            <button type="submit" className="btn btn-blue" disabled={uploading} style={{ width: '100%', padding: '0.75rem' }}>
+              {uploading ? '...' : 'Add Title'}
             </button>
-          </div>
-          <div className="items-table-container">
-            {loading && <p>Loading...</p>}
-            {!loading && magazines.length === 0 && <p>No magazines yet.</p>}
-            <table className="items-table">
-              <tbody>
-                {magazines.map(magazine => (
-                  <tr key={magazine.id}>
-                    <td><img src={magazine.cover_url} alt={magazine.title} width="50" /></td>
-                    <td>{magazine.title}</td>
-                    <td>
-                      <a href={magazine.pdf_url} target="_blank" rel="noopener noreferrer" className="btn btn-sm">View</a>
-                      <button onClick={() => handleDelete(magazine.id, magazine.cover_url, magazine.pdf_url)} className="btn btn-red btn-sm">Delete</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          </form>
         </div>
+
+        <div>
+           <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Publication Titles in {category.name}</h3>
+           {loading ? <p>Loading...</p> : (
+             <div style={{ display: 'grid', gap: '1rem' }}>
+               {titles.map(t => (
+                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                   <div style={{ fontWeight: '700' }}>{t.name}</div>
+                   <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn btn-blue btn-sm" style={{ fontWeight: '800' }} onClick={() => setSelectedTitle(t)}>
+                        <i className="fas fa-tasks"></i> Manage Issues
+                      </button>
+                      <button className="btn btn-red btn-sm" onClick={() => handleDelete(t.id)}><i className="fas fa-trash"></i></button>
+                   </div>
+                 </div>
+               ))}
+               {titles.length === 0 && <p style={{ color: '#94a3b8' }}>No titles found.</p>}
+             </div>
+           )}
+        </div>
+
       </div>
     </div>
   );
