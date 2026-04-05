@@ -178,6 +178,12 @@ const MagazinesPage = () => {
         }
         
         /* BUTTON STYLING */
+        .mag-btn-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-top: 8px;
+        }
         .mag-btn {
           display: flex;
           align-items: center;
@@ -185,15 +191,18 @@ const MagazinesPage = () => {
           gap: 5px;
           background: #1e3799;
           color: white;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
-          padding: 8px;
+          padding: 8px 4px;
           border-radius: 8px;
-          margin-top: 4px;
           transition: background 0.2s;
+          text-decoration: none;
         }
-        .mag-card:hover .mag-btn { background: #1a2a7a; }
-        .old-btn { background: #64748b; }
+        .mag-btn:hover { background: #1a2a7a; }
+        .subscribe-btn { background: #739d41; }
+        .subscribe-btn:hover { background: #5d7e34; }
+        .old-btn { background: #64748b; font-size: 12px; padding: 10px; width: 100%; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; font-weight: 700; }
+        .full-btn { grid-column: 1 / -1; }
       `}</style>
 
       {/* 1. CURRENT MAGAZINES */}
@@ -204,26 +213,35 @@ const MagazinesPage = () => {
           </h2>
           <div className="mag-grid">
             {currentCats.map((cat, index) => (
-              <a key={cat.id} href={`/magazine-detail.html?id=${cat.id}`} className="mag-card">
-                <div className="mag-img-container">
-                  <img 
-                    src={cat.cover_url || FALLBACK_COVER}
-                    alt={cat.name} 
-                    width="520"
-                    height="380"
-                    onLoad={(e) => e.target.classList.add('loaded')}
-                    onError={handleCoverError}
-                    loading={index < 4 ? "eager" : "lazy"} 
-                    decoding="async"
-                    fetchpriority={index < 2 ? "high" : "auto"}
-                  />
+              <div key={cat.id} className="mag-card">
+                <a href={`/magazine-detail.html?id=${cat.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className="mag-img-container">
+                    <img 
+                      src={cat.cover_url || FALLBACK_COVER}
+                      alt={cat.name} 
+                      width="520"
+                      height="380"
+                      onLoad={(e) => e.target.classList.add('loaded')}
+                      onError={handleCoverError}
+                      loading={index < 4 ? "eager" : "lazy"} 
+                      decoding="async"
+                      fetchpriority={index < 2 ? "high" : "auto"}
+                    />
+                  </div>
+                  <div className="mag-card-content">
+                    <div className="mag-title">{cat.name}</div>
+                    <div className="mag-subtitle">{cat.description || 'Latest actively running publication.'}</div>
+                  </div>
+                </a>
+                <div className="mag-btn-container">
+                  <a href={`/magazine-detail.html?id=${cat.id}`} className="mag-btn">
+                    <i className="fas fa-book-open"></i> Browse
+                  </a>
+                  <a href="/subscription.html" className="mag-btn subscribe-btn">
+                    <i className="fas fa-calendar-check"></i> Subscribe
+                  </a>
                 </div>
-                <div className="mag-card-content">
-                  <div className="mag-title">{cat.name}</div>
-                  <div className="mag-subtitle">{cat.description || 'Latest actively running publication.'}</div>
-                  <div className="mag-btn"><i className="fas fa-book-open" style={{ fontSize: '10px' }}></i> Browse</div>
-                </div>
-              </a>
+              </div>
             ))}
           </div>
         </div>
@@ -236,25 +254,31 @@ const MagazinesPage = () => {
         </h2>
         <div className="mag-grid">
           {oldCats.length > 0 ? oldCats.map(cat => (
-            <a key={cat.id} href={`/magazine-detail.html?id=${cat.id}`} className="mag-card">
-              <div className="mag-img-container">
-                <img 
-                  src={cat.cover_url || FALLBACK_COVER}
-                  alt={cat.name} 
-                  width="520"
-                  height="380"
-                  onLoad={(e) => e.target.classList.add('loaded')}
-                  onError={handleCoverError}
-                  loading="lazy" 
-                  decoding="async"
-                />
+            <div key={cat.id} className="mag-card">
+              <a href={`/magazine-detail.html?id=${cat.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="mag-img-container">
+                  <img 
+                    src={cat.cover_url || FALLBACK_COVER}
+                    alt={cat.name} 
+                    width="520"
+                    height="380"
+                    onLoad={(e) => e.target.classList.add('loaded')}
+                    onError={handleCoverError}
+                    loading="lazy" 
+                    decoding="async"
+                  />
+                </div>
+                <div className="mag-card-content">
+                  <div className="mag-title">{cat.name}</div>
+                  <div className="mag-subtitle">{cat.description || 'Past archived collection.'}</div>
+                </div>
+              </a>
+              <div className="mag-btn-container">
+                <a href={`/magazine-detail.html?id=${cat.id}`} className="old-btn full-btn">
+                  <i className="fas fa-archive"></i> View Archive
+                </a>
               </div>
-              <div className="mag-card-content">
-                <div className="mag-title">{cat.name}</div>
-                <div className="mag-subtitle">{cat.description || 'Past archived collection.'}</div>
-                <div className="mag-btn old-btn"><i className="fas fa-archive" style={{ fontSize: '10px' }}></i> Archive</div>
-              </div>
-            </a>
+            </div>
           )) : <div style={{ color: '#94a3b8', padding: '2rem', gridColumn: '1/-1', textAlign: 'center' }}>No archived editions found.</div>}
         </div>
       </div>

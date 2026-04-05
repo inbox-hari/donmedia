@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscribe | Donmedia Publications</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <header class="usborne-header"><div class="usborne-top-bar">
+      <span style="height: 2px;"></span>
+    </div>
+    <nav class="usborne-nav">
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a href="index.html" class="logo">
+        <div class="logo-title">
+          <i class="fas fa-hotairballoon" style="color: #e11d48"></i>
+          DONMEDIA
+        </div>
+        <div class="logo-subtitle">Be Curious.</div>
+      </a>
+
+      <ul class="desktop-nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li class="dropdown">
+          <div class="store-nav-wrapper">
+            <a href="store.html">Store</a>
+            <button class="dropdown-toggle toggle-icon" type="button" aria-expanded="false"><i
+                class="fas fa-chevron-down caret-icon"></i></button>
+          </div>
+          <ul class="dropdown-menu">
+            <li><a href="book-store.html">Book Store</a></li>
+            <li><a href="magazines.html">Magazines</a></li>
+            <li><a href="digital-store.html">Digital Store</a></li>
+            <li><a href="free-store.html">Free Store</a></li>
+          </ul>
+        </li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+
+      <div class="search-icon"><i class="fas fa-search"></i></div>
+    </nav>
+  </header>
+
+  <main class="main-content" style="background-color: #f8fafc; padding: 2rem 0">
+    <div id="subscription-root" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;"></div>
+  </main>
+
+  <div id="react-reader-root"></div>
+  
+  <script type="module" src="/src/subscription-entry.jsx"></script>
+  <script type="module" src="/src/script.js"></script>
+</body>
+
+</html>
