@@ -110,35 +110,24 @@ const MagazineDetailPage = () => {
         .mag-card-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 0.4rem; line-height: 1.3; }
         .mag-card-meta { font-size: 0.85rem; color: #e11d48; font-weight: 700; margin-bottom: 1.25rem; }
         
-        .mag-actions {
-          margin-top: auto;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0.75rem;
-        }
-
-        .read-btn, .sub-btn { 
+        .read-btn { 
+          margin-top: auto; 
           display: flex; 
           align-items: center; 
           justify-content: center; 
           gap: 0.5rem; 
-          padding: 0.75rem 0.5rem; 
+          background: #1e3a8a; 
+          color: #fff; 
+          padding: 0.75rem; 
           border-radius: 8px; 
           text-align: center; 
           font-weight: 700; 
           cursor: pointer; 
           border: none; 
-          transition: all 0.2s;
+          transition: background 0.2s;
           text-decoration: none;
-          font-size: 0.85rem;
         }
-        .read-btn { background: #1e3a8a; color: #fff; }
         .read-btn:hover { background: #1e40af; }
-        .sub-btn { background: #739d41; color: #fff; }
-        .sub-btn:hover { background: #5d7e34; }
-        
-        .full-width-btn { grid-column: 1 / -1; }
-
         .empty-state { grid-column: 1/-1; padding: 6rem 2rem; text-align: center; color: #94a3b8; background: #f8fafc; border-radius: 16px; border: 2px dashed #e2e8f0; }
       `}</style>
 
@@ -173,16 +162,9 @@ const MagazineDetailPage = () => {
             <div className="mag-card-content">
                <h3 className="mag-card-title">{mag.title}</h3>
                <div className="mag-card-meta">{mag.month} {mag.year}</div>
-               <div className="mag-actions">
-                 <button type="button" className={`read-btn ${category?.type !== 'current' ? 'full-width-btn' : ''}`} onClick={() => openReader(mag)}>
-                   <i className="fas fa-book-open"></i> READ NOW
-                 </button>
-                 {category?.type === 'current' && (
-                    <a href="/subscription.html" className="sub-btn">
-                      <i className="fas fa-calendar-check"></i> SUBSCRIBE
-                    </a>
-                 )}
-               </div>
+               <button type="button" className="read-btn" onClick={() => openReader(mag)}>
+                 <i className="fas fa-book-open"></i> READ NOW
+               </button>
             </div>
           </div>
         )) : (
