@@ -45,6 +45,16 @@ const SubscriptionForm = () => {
         }
     };
 
+    const indianStates = [
+        "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
+        "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
+        "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
+        "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", 
+        "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", 
+        "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", 
+        "Ladakh", "Lakshadweep", "Puducherry"
+    ];
+
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Form Submitted:', formData);
@@ -222,7 +232,7 @@ const SubscriptionForm = () => {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
-            
+
             <div className="back-nav">
                 <a href="/magazines.html">
                     <i className="fas fa-chevron-left"></i> Back to Store
@@ -232,7 +242,7 @@ const SubscriptionForm = () => {
             <form onSubmit={handleSubmit} className="form-card">
                 <div className="form-header">
                     <h2>Subscription Details</h2>
-                    <p>Complete the form below to start your journey.</p>
+
                 </div>
 
                 {/* 1. PARENT INFO */}
@@ -292,10 +302,9 @@ const SubscriptionForm = () => {
                         <label className="required">State</label>
                         <select required value={formData.shipping.state} onChange={(e) => handleInputChange('shipping', 'state', e.target.value)}>
                             <option value="">Select State</option>
-                            <option value="Kerala">Kerala</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="Other">Other</option>
+                            {indianStates.map(state => (
+                                <option key={state} value={state}>{state}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
