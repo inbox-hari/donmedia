@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { supabase } from './supabase-client';
 
 const SubscriptionForm = () => {
     const [formData, setFormData] = useState({
@@ -55,10 +56,32 @@ const SubscriptionForm = () => {
         "Ladakh", "Lakshadweep", "Puducherry"
     ];
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form Submitted:', formData);
-        alert('Redirecting to payment gateway...');
+        
+        try {
+            const { error } = await supabase.from('subscriptions').insert([{
+                first_name: formData.shipping.firstName,
+                last_name: formData.shipping.lastName,
+                email: formData.shipping.email,
+                mobile: formData.shipping.mobile,
+                address1: formData.shipping.address1,
+                address2: formData.shipping.address2,
+                city: formData.shipping.city,
+                state: formData.shipping.state,
+                pin_code: formData.shipping.pinCode,
+                status: 'pending'
+            }]);
+
+            if (error) throw error;
+            
+            console.log('Subscription saved to database');
+            alert('Selection saved! Redirecting to payment gateway...');
+            // In a real app, here you would redirect to CCAvenue or similar
+        } catch (error) {
+            console.error('Error saving subscription:', error);
+            alert('There was an error processing your request. Please try again.');
+        }
     };
 
     return (
