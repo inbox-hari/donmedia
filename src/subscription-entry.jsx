@@ -3,8 +3,6 @@ import { createRoot } from 'react-dom/client';
 
 const SubscriptionForm = () => {
     const [formData, setFormData] = useState({
-        startMonth: '',
-        startYear: '2026',
         shipping: {
             firstName: '',
             lastName: '',
@@ -46,14 +44,6 @@ const SubscriptionForm = () => {
             }));
         }
     };
-
-    const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear.toString(), (currentYear + 1).toString()];
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -163,26 +153,6 @@ const SubscriptionForm = () => {
                     gap: 1rem;
                 }
 
-                .radio-group {
-                    background: #f8fafc;
-                    padding: 1rem;
-                    border-radius: 12px;
-                    border: 1px solid #f1f5f9;
-                }
-                .radio-option {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    padding: 0.5rem 0;
-                    cursor: pointer;
-                    font-weight: 600;
-                    color: #475569;
-                }
-                .radio-option input {
-                    width: auto;
-                    accent-color: #739d41;
-                }
-
                 /* Sticky Footer */
                 .sticky-cta-container {
                     position: fixed;
@@ -247,6 +217,10 @@ const SubscriptionForm = () => {
                         grid-template-columns: 1fr;
                     }
                 }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
             `}</style>
             
             <div className="back-nav">
@@ -261,38 +235,7 @@ const SubscriptionForm = () => {
                     <p>Complete the form below to start your journey.</p>
                 </div>
 
-                {/* 1. START DATE */}
-                <div className="form-section">
-                    <div className="section-title">
-                        <i className="fas fa-calendar-alt"></i>
-                        Start Subscription
-                    </div>
-                    <div className="grid-2">
-                        <div className="form-group">
-                            <label className="required">Month</label>
-                            <select 
-                                value={formData.startMonth} 
-                                onChange={(e) => handleInputChange(null, 'startMonth', e.target.value)}
-                                required
-                            >
-                                <option value="">Select Month</option>
-                                {months.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label className="required">Year</label>
-                            <select 
-                                value={formData.startYear} 
-                                onChange={(e) => handleInputChange(null, 'startYear', e.target.value)}
-                                required
-                            >
-                                {years.map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. PARENT INFO */}
+                {/* 1. PARENT INFO */}
                 <div className="form-section">
                     <div className="section-title">
                         <i className="fas fa-user-friends"></i>
@@ -321,7 +264,7 @@ const SubscriptionForm = () => {
                     </div>
                 </div>
 
-                {/* 3. SHIPPING ADDRESS */}
+                {/* 2. SHIPPING ADDRESS */}
                 <div className="form-section">
                     <div className="section-title">
                         <i className="fas fa-truck"></i>
@@ -356,54 +299,6 @@ const SubscriptionForm = () => {
                         </select>
                     </div>
                 </div>
-
-                {/* 4. BILLING TOGGLE */}
-                <div className="form-section">
-                    <div className="section-title">
-                        <i className="fas fa-file-invoice"></i>
-                        Billing Preferences
-                    </div>
-                    <div className="radio-group">
-                        <label className="radio-option">
-                            <input 
-                                type="radio" 
-                                name="billingSameAsShipping" 
-                                checked={formData.billingSameAsShipping} 
-                                onChange={() => setFormData(prev => ({...prev, billingSameAsShipping: true}))} 
-                            />
-                            Same as shipping address
-                        </label>
-                        <label className="radio-option">
-                            <input 
-                                type="radio" 
-                                name="billingSameAsShipping" 
-                                checked={!formData.billingSameAsShipping} 
-                                onChange={() => setFormData(prev => ({...prev, billingSameAsShipping: false}))} 
-                            />
-                            Different billing address
-                        </label>
-                    </div>
-                </div>
-
-                {!formData.billingSameAsShipping && (
-                    <div className="form-section billing-fields" style={{ animation: 'fadeIn 0.3s ease' }}>
-                        <div className="grid-2">
-                            <div className="form-group">
-                                <label className="required">First Name</label>
-                                <input type="text" required value={formData.billing.firstName} onChange={(e) => handleInputChange('billing', 'firstName', e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                                <label className="required">Last Name</label>
-                                <input type="text" required value={formData.billing.lastName} onChange={(e) => handleInputChange('billing', 'lastName', e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label className="required">Address</label>
-                            <input type="text" required value={formData.billing.address1} onChange={(e) => handleInputChange('billing', 'address1', e.target.value)} />
-                        </div>
-                        {/* Simplified billing for brevity in refactor */}
-                    </div>
-                )}
 
                 {/* Sticky CTA Area */}
                 <div className="sticky-cta-container">

@@ -58,6 +58,30 @@
   </main>
 
   <div id="react-reader-root"></div>
+  <!-- Mobile Menu Overlay -->
+  <div class="mobile-menu" id="mobile-menu">
+    <button class="menu-close" id="menu-close" type="button" aria-label="Close menu"><i
+        class="fas fa-times"></i></button>
+    <ul class="mobile-nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li class="dropdown">
+        <div class="store-nav-wrapper">
+          <a href="store.html" class="active">Store</a>
+          <button class="dropdown-toggle toggle-icon" type="button" aria-expanded="false"><i
+              class="fas fa-chevron-down caret-icon"></i></button>
+        </div>
+        <ul class="dropdown-menu">
+          <li><a href="book-store.html">Book Store</a></li>
+          <li><a href="magazines.html">Magazines</a></li>
+          <li><a href="digital-store.html">Digital Store</a></li>
+          <li><a href="free-store.html">Free Store</a></li>
+        </ul>
+      </li>
+      <li><a href="about.html">About Us</a></li>
+      <li><a href="contact.html">Contact Us</a></li>
+    </ul>
+  </div>
+  <div class="menu-backdrop" id="menu-backdrop"></div>
   
   <script type="module" src="/src/reader-modal-entry.jsx"></script>
   <script type="module" src="/src/magazine-detail-entry.jsx"></script>
