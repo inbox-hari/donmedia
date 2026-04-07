@@ -16,8 +16,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     state TEXT NOT NULL,
     pin_code TEXT NOT NULL,
     
-    -- Status
-    status TEXT DEFAULT 'pending' -- pending, completed, failed
+    -- Status and soft-delete
+    status TEXT DEFAULT 'pending', -- pending, active, completed, failed
+    is_deleted BOOLEAN DEFAULT false
 );
 
 -- Enable RLS

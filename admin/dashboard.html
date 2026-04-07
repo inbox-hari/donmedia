@@ -43,6 +43,9 @@
       <button class="nav-link" id="nav-subscriptions" onclick="switchTab('subscriptions')">
         <i class="fas fa-users"></i> Subscriptions
       </button>
+      <button class="nav-link" id="nav-bin" onclick="switchTab('bin')">
+        <i class="fas fa-trash-alt"></i> Bin
+      </button>
 
       <div class="sidebar-section" style="margin-top:1.2rem">Site</div>
       <a class="nav-link" href="/index.html" target="_blank">
@@ -120,6 +123,9 @@
         </button>
         <button class="tab-btn" id="tab-subscriptions-btn" onclick="switchTab('subscriptions')">
           <i class="fas fa-users"></i> Subscriptions
+        </button>
+        <button class="tab-btn" id="tab-bin-btn" onclick="switchTab('bin')">
+          <i class="fas fa-trash-alt"></i> Bin
         </button>
       </div>
 
@@ -239,15 +245,44 @@
                   <th>Contact</th>
                   <th>Address</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="subscriptions-tbody">
-                <tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-clock"></i><p>Loading subscriptions…</p></div></td></tr>
+                <tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-clock"></i><p>Loading subscriptions…</p></div></td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div><!-- /tab-subscriptions -->
+
+      <!-- ════ BIN TAB ════ -->
+      <div class="tab-panel" id="tab-bin">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-trash-alt"></i> Deleted Subscriptions (Bin)</h3>
+            <button class="btn btn-ghost btn-sm" onclick="loadBin()">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="items-table" id="bin-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bin-tbody">
+                <tr><td colspan="5"><div class="empty-state"><i class="fas fa-hourglass-start"></i><p>Loading bin…</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /tab-bin -->
 
     </div><!-- /admin-body -->
   </div><!-- /admin-main -->
@@ -406,15 +441,16 @@ bindFilePicker('b-pdf-file',   'b-pdf-name');
    TAB SWITCHING
    ════════════════════════════════════════════════════════════ */
 function switchTab(tab) {
-  ['books', 'magazines', 'subscriptions'].forEach(t => {
+  ['books', 'magazines', 'subscriptions', 'bin'].forEach(t => {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t + '-btn').classList.toggle('active', t === tab);
     document.getElementById('nav-' + t).classList.toggle('active', t === tab);
   });
-  const titles = { books: 'Books', magazines: 'Magazines', subscriptions: 'Subscriptions' };
+  const titles = { books: 'Books', magazines: 'Magazines', subscriptions: 'Subscriptions', bin: 'Bin' };
   document.getElementById('topbar-title').textContent = titles[tab] || tab;
 
   if (tab === 'subscriptions') loadSubscriptions();
+  if (tab === 'bin') loadBin();
   
   // close mobile sidebar after selecting
   closeSidebar();
@@ -621,15 +657,16 @@ async function saveBook(id) {
 async function loadSubscriptions() {
   const tbody = document.getElementById('subscriptions-tbody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
 
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
+    .eq('is_deleted', false)
     .order('created_at', { ascending: false });
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444"></i><p>Error: ${error.message}</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444"></i><p>Error: ${error.message}</p></div></td></tr>`;
     return;
   }
 
@@ -637,12 +674,13 @@ async function loadSubscriptions() {
   if (statSub) statSub.textContent = data.length;
 
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users"></i><p>No subscriptions found.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-users"></i><p>No subscriptions found.</p></div></td></tr>';
     return;
   }
 
   tbody.innerHTML = data.map(sub => {
     const date = new Date(sub.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const isPending = sub.status === 'pending';
     return `
       <tr>
         <td>${date}</td>
@@ -655,12 +693,103 @@ async function loadSubscriptions() {
           <div style="font-size:0.85rem">${escHtml(sub.address1)}</div>
           <div style="font-size:0.8rem;opacity:0.7">${escHtml(sub.city)}, ${escHtml(sub.state)} - ${escHtml(sub.pin_code)}</div>
         </td>
-        <td><span class="badge ${sub.status === 'completed' ? 'badge-green' : 'badge-blue'}">${escHtml(sub.status)}</span></td>
+        <td><span class="badge ${sub.status === 'active' ? 'badge-green' : 'badge-blue'}">${escHtml(sub.status)}</span></td>
+        <td>
+          <div class="action-group">
+            <button class="btn ${isPending ? 'btn-green' : 'btn-orange'} btn-sm" onclick="toggleSubStatus('${sub.id}', '${sub.status}')">
+              <i class="fas ${isPending ? 'fa-check-circle' : 'fa-clock'}"></i> ${isPending ? 'Mark Active' : 'Mark Pending'}
+            </button>
+            <button class="btn btn-red btn-sm" onclick="softDeleteSub('${sub.id}')">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
 }
 window.loadSubscriptions = loadSubscriptions;
+
+async function toggleSubStatus(id, currentStatus) {
+  const newStatus = currentStatus === 'pending' ? 'active' : 'pending';
+  const { error } = await supabase.from('subscriptions').update({ status: newStatus }).eq('id', id);
+  if (error) { showToast('Update failed: ' + error.message, 'error'); return; }
+  showToast('Status updated to ' + newStatus);
+  loadSubscriptions();
+}
+window.toggleSubStatus = toggleSubStatus;
+
+async function softDeleteSub(id) {
+  if (!confirm('Move this subscription to Bin?')) return;
+  const { error } = await supabase.from('subscriptions').update({ is_deleted: true }).eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Moved to Bin');
+  loadSubscriptions();
+}
+window.softDeleteSub = softDeleteSub;
+
+/* — Bin Logic — */
+async function loadBin() {
+  const tbody = document.getElementById('bin-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div></td></tr>';
+
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('is_deleted', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444"></i><p>Error: ${error.message}</p></div></td></tr>`;
+    return;
+  }
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-trash-alt"></i><p>Bin is empty.</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(sub => {
+    const date = new Date(sub.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `
+      <tr>
+        <td>${date}</td>
+        <td>${escHtml(sub.first_name)} ${escHtml(sub.last_name)}</td>
+        <td>${escHtml(sub.mobile)}</td>
+        <td><span class="badge badge-ghost">${escHtml(sub.status)}</span></td>
+        <td>
+          <div class="action-group">
+            <button class="btn btn-green btn-sm" onclick="restoreSub('${sub.id}')">
+              <i class="fas fa-undo"></i> Restore
+            </button>
+            <button class="btn btn-red btn-sm" onclick="permanentDeleteSub('${sub.id}')">
+              <i class="fas fa-times"></i> Permanent Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+window.loadBin = loadBin;
+
+async function restoreSub(id) {
+  const { error } = await supabase.from('subscriptions').update({ is_deleted: false }).eq('id', id);
+  if (error) { showToast('Restore failed: ' + error.message, 'error'); return; }
+  showToast('Subscription restored');
+  loadBin();
+}
+window.restoreSub = restoreSub;
+
+async function permanentDeleteSub(id) {
+  if (!confirm('This will permanently delete the subscription data. Are you sure?')) return;
+  const { error } = await supabase.from('subscriptions').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
+  showToast('Permanently deleted');
+  loadBin();
+}
+window.permanentDeleteSub = permanentDeleteSub;
 
 /* — Delete Book — */
 async function deleteBook(id, coverUrl, pdfUrl) {
