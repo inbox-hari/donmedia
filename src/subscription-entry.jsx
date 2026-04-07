@@ -29,6 +29,9 @@ const SubscriptionForm = () => {
         }
     });
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
     const handleInputChange = (section, field, value) => {
         if (section) {
             setFormData(prev => ({
@@ -58,6 +61,7 @@ const SubscriptionForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         
         try {
             await supabase.from('subscriptions').insert([{
@@ -74,12 +78,12 @@ const SubscriptionForm = () => {
             }]);
 
             console.log('Subscription saved to database');
-            alert('Your subscription request has been submitted successfully!');
-            // Redirect after success
-            window.location.href = '/magazines.html';
+            setShowSuccess(true);
         } catch (error) {
             console.error('Error saving subscription:', error);
             alert('There was an error processing your request. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -218,20 +222,74 @@ const SubscriptionForm = () => {
                 .cta-btn:active {
                     transform: scale(0.98);
                 }
-                
-                .footer-info {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    font-size: 0.8rem;
-                    color: #94a3b8;
+                .cta-btn:disabled {
+                    background: #cbd5e1;
+                    box-shadow: none;
+                    cursor: not-allowed;
                 }
-                .trust-icon {
+
+                /* Success Modal */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(15, 23, 42, 0.8);
                     display: flex;
                     align-items: center;
-                    gap: 4px;
+                    justify-content: center;
+                    z-index: 1000;
+                    animation: fadeIn 0.3s ease;
+                }
+                .modal-card {
+                    background: white;
+                    border-radius: 24px;
+                    padding: 2.5rem 2rem;
+                    max-width: 450px;
+                    width: 90%;
+                    text-align: center;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                .modal-icon {
+                    width: 80px;
+                    height: 80px;
+                    background: #f0f9eb;
+                    color: #739d41;
+                    border-radius: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 2.5rem;
+                    margin: 0 auto 1.5rem;
+                }
+                .modal-card h3 {
                     color: #1e3a8a;
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    margin-bottom: 1rem;
+                }
+                .modal-card p {
+                    color: #64748b;
+                    line-height: 1.6;
+                    margin-bottom: 2rem;
+                    font-size: 1.1rem;
+                }
+                .modal-btn {
+                    background: #1e3a8a;
+                    color: white;
+                    border: none;
+                    width: 100%;
+                    padding: 1rem;
+                    border-radius: 12px;
                     font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .modal-btn:hover {
+                    background: #1e3799;
+                    transform: translateY(-2px);
                 }
 
                 @media (max-width: 480px) {
@@ -250,11 +308,15 @@ const SubscriptionForm = () => {
                     }
                 }
                 @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
-
+            
             <div className="back-nav">
                 <a href="/magazines.html">
                     <i className="fas fa-chevron-left"></i> Back to Store
@@ -264,7 +326,6 @@ const SubscriptionForm = () => {
             <form onSubmit={handleSubmit} className="form-card">
                 <div className="form-header">
                     <h2>Subscription Details</h2>
-
                 </div>
 
                 {/* 1. PARENT INFO */}
@@ -333,11 +394,29 @@ const SubscriptionForm = () => {
 
                 {/* Sticky CTA Area */}
                 <div className="sticky-cta-container">
-                    <button type="submit" className="cta-btn">
-                        Submit
+                    <button type="submit" className="cta-btn" disabled={isSubmitting}>
+                        {isSubmitting ? 'Submitting...' : 'Submit'}
                     </button>
                 </div>
             </form>
+
+            {/* Success Modal */}
+            {showSuccess && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-icon">
+                            <i className="fas fa-check"></i>
+                        </div>
+                        <h3>Submission Successful!</h3>
+                        <p>
+                            Your subscription request has been received successfully! Our team will contact you within 24 hours to activate your subscription.
+                        </p>
+                        <button className="modal-btn" onClick={() => window.location.href = '/magazines.html'}>
+                            Return to Magazines
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
