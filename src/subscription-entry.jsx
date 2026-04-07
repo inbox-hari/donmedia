@@ -60,7 +60,7 @@ const SubscriptionForm = () => {
         e.preventDefault();
         
         try {
-            const { error } = await supabase.from('subscriptions').insert([{
+            await supabase.from('subscriptions').insert([{
                 first_name: formData.shipping.firstName,
                 last_name: formData.shipping.lastName,
                 email: formData.shipping.email,
@@ -73,11 +73,10 @@ const SubscriptionForm = () => {
                 status: 'pending'
             }]);
 
-            if (error) throw error;
-            
             console.log('Subscription saved to database');
-            alert('Selection saved! Redirecting to payment gateway...');
-            // In a real app, here you would redirect to CCAvenue or similar
+            alert('Your subscription request has been submitted successfully!');
+            // Redirect after success
+            window.location.href = '/magazines.html';
         } catch (error) {
             console.error('Error saving subscription:', error);
             alert('There was an error processing your request. Please try again.');
@@ -335,17 +334,8 @@ const SubscriptionForm = () => {
                 {/* Sticky CTA Area */}
                 <div className="sticky-cta-container">
                     <button type="submit" className="cta-btn">
-                        Continue to Payment
+                        Submit
                     </button>
-                    <div className="footer-info">
-                        <div className="trust-icon">
-                            <i className="fas fa-shield-alt"></i> 100% Secure
-                        </div>
-                        <span>•</span>
-                        <div className="trust-icon" style={{ color: '#64748b' }}>
-                            <i className="fas fa-lock"></i> SSL Encrypted
-                        </div>
-                    </div>
                 </div>
             </form>
         </div>
