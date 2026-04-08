@@ -26,7 +26,8 @@ const SubscriptionForm = () => {
             pinCode: '',
             email: '',
             mobile: ''
-        }
+        },
+        products: []
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +62,12 @@ const SubscriptionForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (formData.products.length === 0) {
+            alert('Please select at least one magazine to subscribe to.');
+            return;
+        }
+
         setIsSubmitting(true);
         
         try {
@@ -74,7 +81,8 @@ const SubscriptionForm = () => {
                 city: formData.shipping.city,
                 state: formData.shipping.state,
                 pin_code: formData.shipping.pinCode,
-                status: 'pending'
+                status: 'pending',
+                products: formData.products
             }]);
 
             console.log('Subscription saved to database');
@@ -187,6 +195,69 @@ const SubscriptionForm = () => {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 1rem;
+                }
+
+                /* Product Selection Styling */
+                .product-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1rem;
+                    margin-bottom: 0.5rem;
+                }
+                .product-option {
+                    position: relative;
+                    cursor: pointer;
+                }
+                .product-option input {
+                    display: none;
+                }
+                .product-box {
+                    padding: 1rem;
+                    border: 2px solid #f1f5f9;
+                    border-radius: 12px;
+                    text-align: center;
+                    background: #f8fafc;
+                    transition: all 0.2s;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .product-box i {
+                    font-size: 1.5rem;
+                    color: #64748b;
+                }
+                .product-box span {
+                    font-weight: 800;
+                    color: #334155;
+                }
+                .product-option input:checked + .product-box {
+                    border-color: #739d41;
+                    background: #f0f9eb;
+                }
+                .product-option input:checked + .product-box i {
+                    color: #739d41;
+                }
+                .product-option input:checked + .product-box span {
+                    color: #1e3a8a;
+                }
+                .product-check-badge {
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    width: 24px;
+                    height: 24px;
+                    background: #739d41;
+                    color: white;
+                    border-radius: 12px;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.75rem;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                }
+                .product-option input:checked ~ .product-check-badge {
+                    display: flex;
                 }
 
                 /* Sticky Footer */
@@ -326,6 +397,54 @@ const SubscriptionForm = () => {
             <form onSubmit={handleSubmit} className="form-card">
                 <div className="form-header">
                     <h2>Subscription Details</h2>
+                </div>
+
+                {/* 0. PRODUCT SELECTION */}
+                <div className="form-section">
+                    <div className="section-title">
+                        <i className="fas fa-shopping-cart"></i>
+                        Select Magazine *
+                    </div>
+                    <div className="product-grid">
+                        <label className="product-option">
+                            <input 
+                                type="checkbox" 
+                                checked={formData.products.includes('Little Whiz')} 
+                                onChange={(e) => {
+                                    const current = [...formData.products];
+                                    if (e.target.checked) current.push('Little Whiz');
+                                    else current.splice(current.indexOf('Little Whiz'), 1);
+                                    handleInputChange(null, 'products', current);
+                                }}
+                            />
+                            <div className="product-box">
+                                <i className="fas fa-child"></i>
+                                <span>Little Whiz</span>
+                            </div>
+                            <div className="product-check-badge"><i className="fas fa-check"></i></div>
+                        </label>
+
+                        <label className="product-option">
+                            <input 
+                                type="checkbox" 
+                                checked={formData.products.includes('EurekaFM')} 
+                                onChange={(e) => {
+                                    const current = [...formData.products];
+                                    if (e.target.checked) current.push('EurekaFM');
+                                    else current.splice(current.indexOf('EurekaFM'), 1);
+                                    handleInputChange(null, 'products', current);
+                                }}
+                            />
+                            <div className="product-box">
+                                <i className="fas fa-lightbulb"></i>
+                                <span>EurekaFM</span>
+                            </div>
+                            <div className="product-check-badge"><i className="fas fa-check"></i></div>
+                        </label>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', textAlign: 'center', marginTop: '0.75rem' }}>
+                        (You can choose one or both magazines)
+                    </p>
                 </div>
 
                 {/* 1. PARENT INFO */}
